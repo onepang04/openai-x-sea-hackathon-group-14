@@ -158,6 +158,8 @@ export async function scoreVisualClaimIntegrity(e: EnrichedClaim): Promise<Signa
       alternativeExplanations: o.alternative_explanations,
       textImageMatch: o.text_image_match,
       mismatches: o.mismatches,
+      hardFlag,
+      reason: hardFlag ? "high-confidence physical implausibility" : undefined,
       ...(hardFlag
         ? { hardFlagTrigger: "Implausible physical damage reported with high confidence." }
         : {}),
