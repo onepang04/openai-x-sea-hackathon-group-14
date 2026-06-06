@@ -2,13 +2,20 @@
   "name": "claim-integrity-agent",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "workspaces": [
-    "apps/api"
+    "apps/api",
+    "apps/web"
   ],
   "scripts": {
     "dev": "npm --workspace apps/api run dev",
-    "typecheck": "npm --workspace apps/api run typecheck",
+    "dev:web": "npm run dev --workspace @claim-integrity/web",
+    "build": "npm run build --workspace @claim-integrity/web",
+    "typecheck": "npm --workspaces --if-present run typecheck",
+    "typecheck:api": "npm --workspace apps/api run typecheck",
+    "typecheck:web": "npm run typecheck --workspace @claim-integrity/web",
     "eval:signal1": "npm --workspace apps/api run eval:signal1",
-    "eval:pipeline": "npm --workspace apps/api run eval:pipeline"
+    "eval:pipeline": "npm --workspace apps/api run eval:pipeline",
+    "preview": "npm run preview --workspace @claim-integrity/web"
   }
 }
