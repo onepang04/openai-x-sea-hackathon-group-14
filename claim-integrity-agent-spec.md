@@ -131,7 +131,7 @@ score to at least 75 (into High).
 - **Whole numbers only** — no false precision; you have no labelled data.
 - **Label it "Risk Score," not "Fraud Probability."** It's a triage ordinal, not a calibrated probability.
 
-**Final call (SEA-LION)** turns (score, band, signal evidences) into a 2–3 sentence reviewer explanation +
+**Final call (OpenAI)** turns (score, band, signal evidences) into a 2–3 sentence reviewer explanation +
 recommended action. The math owns the number; the model owns the prose; it must only cite signals that
 actually fired and never invent facts.
 
@@ -141,16 +141,14 @@ actually fired and never invent facts.
 
 ```
 React + Vite + Tailwind  ->  Node + TS + Express  ->  OpenAI  (vision: Signal 1)
-(claim list, verdict card)   (signal runner,            SEA-LION (narrator) via
-                              aggregator, narrator)      OpenAI-compatible API
+(claim list, verdict card)   (signal runner,            OpenAI   (narrator) text
+                              aggregator, narrator)      call, same SDK
                                                          in-memory JSON: data/*.json + pHash index
 ```
 
-- **Models:** OpenAI for the Signal 1 vision call; SEA-LION (AI Singapore) for the narrator, via its
-  OpenAI-compatible API (`https://api.sea-lion.ai/v1`, `SEA_LION_API_KEY`, model e.g.
-  `aisingapore/Qwen-SEA-LION-v4-32B-IT`). Same `openai` SDK, two clients. SEA-LION has no vision model,
-  so vision must stay on OpenAI. Wrap the narrator with a fallback (OpenAI text or templated) — it's
-  the flakiest call and the score doesn't depend on it.
+- **Models:** OpenAI for the Signal 1 vision call; OpenAI text for the narrator. One `openai` client,
+  two model ids read from env (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`, auth `OPENAI_API_KEY`).
+  Wrap the narrator with a templated fallback — it's the flakiest call and the score doesn't depend on it.
 
 - **Data:** `data/products.json`, `data/accounts.json`, `data/orders.json`, `data/claims.json`;
   images in `data/images/claims/` and `data/images/reference/`. No DB.
@@ -292,10 +290,10 @@ gap (existing dropship tools target US/EU patterns, not SEA pricing).*
 
 ## Open Questions
 
-- **Model strings:** verify the current OpenAI vision model AND the SEA-LION narrator model at the
-  venue (query SEA-LION's `/v1/models`); read both from env vars, don't hardcode guesses.
-- **SEA-LION rate limit:** confirm your tier's limit (free tier has been ~10 req/min, 1 key per user)
-  and make sure it won't bite during repeated eval runs or the live demo; the narrator fallback covers it.
+- **Model strings:** verify the current OpenAI vision model AND the OpenAI narrator (text) model at the
+  venue; read both from env vars, don't hardcode guesses.
+- **OpenAI rate limit:** confirm your tier's request/token limits won't bite during repeated eval runs
+  or the live demo; the narrator's templated fallback covers a transient failure.
 - **Logistics override demo:** add a 7th scenario, or present it as a capability? (See the gap note above.)
 - **Image format:** confirm all images are JPG (~1024px) and filenames match the JSON exactly.
 - **Pitch video:** recording a 90-second backup, or live-demo only? (Affects hour 8–9 budget.)

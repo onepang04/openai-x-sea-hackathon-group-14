@@ -37,7 +37,7 @@ Codex model for ChatGPT sign-in is `gpt-5.5`; the repo includes
 
 ### 4. Configure model/API environment
 
-The app uses OpenAI for Signal 1 vision and SEA-LION for reviewer narration.
+The app uses OpenAI for both Signal 1 vision and reviewer narration.
 Codex auth is separate from these app API keys.
 
 ```bash
@@ -49,8 +49,7 @@ Fill in:
 ```bash
 OPENAI_API_KEY=sk-...
 OPENAI_VISION_MODEL=<verify-current-openai-vision-model>
-SEA_LION_API_KEY=...
-SEA_LION_MODEL=<verify-via-sea-lion-v1-models>
+OPENAI_NARRATOR_MODEL=<text-model-for-narration>
 ```
 
 Do not commit real keys. The backend should read model IDs from env vars, not
@@ -111,8 +110,7 @@ Set app environment variables:
 ```powershell
 $env:OPENAI_API_KEY = "sk-..."
 $env:OPENAI_VISION_MODEL = "<verify-current-openai-vision-model>"
-$env:SEA_LION_API_KEY = "..."
-$env:SEA_LION_MODEL = "<verify-via-sea-lion-v1-models>"
+$env:OPENAI_NARRATOR_MODEL = "<text-model-for-narration>"
 ```
 
 Set them permanently if this will be the demo machine:
@@ -120,8 +118,7 @@ Set them permanently if this will be the demo machine:
 ```powershell
 [System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-...", "User")
 [System.Environment]::SetEnvironmentVariable("OPENAI_VISION_MODEL", "<verify-current-openai-vision-model>", "User")
-[System.Environment]::SetEnvironmentVariable("SEA_LION_API_KEY", "...", "User")
-[System.Environment]::SetEnvironmentVariable("SEA_LION_MODEL", "<verify-via-sea-lion-v1-models>", "User")
+[System.Environment]::SetEnvironmentVariable("OPENAI_NARRATOR_MODEL", "<text-model-for-narration>", "User")
 ```
 
 ## Data assets

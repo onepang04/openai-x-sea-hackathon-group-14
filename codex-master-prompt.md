@@ -176,18 +176,17 @@ Elevated → "Route to manual review"; High → "Hold for investigation".
 
 ---
 
-## The narrator — final call, on SEA-LION
+## The narrator — final call, on OpenAI
 After aggregation, one text-only call turns the `ScoredClaim` into a 2–4 sentence explanation for a
-reviewer. **Use SEA-LION** (AI Singapore's regional model) via its OpenAI-compatible API: reuse the
-`openai` SDK with `baseURL: "https://api.sea-lion.ai/v1"`, a separate `SEA_LION_API_KEY`, and a
-SEA-LION model id (e.g. `aisingapore/Qwen-SEA-LION-v4-32B-IT` — confirm via `/v1/models` on the day).
+reviewer. **Use OpenAI**: reuse the same `openai` SDK and `OPENAI_API_KEY`, with a text model id from
+`OPENAI_NARRATOR_MODEL` (may differ from the vision model — a cheaper text model is fine).
 It must **only** reference the signals that actually drove the score, name the band, and never invent
 facts not in the signal evidence. Write the result into `explanation`.
 
-**Resilience (required):** put the narrator behind a small interface and wrap the SEA-LION call in
-try/catch with a fallback (an OpenAI text call, or a templated string built from the signal evidence)
+**Resilience (required):** put the narrator behind a small interface and wrap the call in
+try/catch with a fallback (a templated string built from the signal evidence)
 if it errors, times out, or rate-limits. The Risk Score and band do NOT depend on the narrator, so a
-SEA-LION hiccup must never break a claim — it just swaps the prose.
+narrator hiccup must never break a claim — it just swaps the prose.
 
 ---
 
@@ -247,8 +246,8 @@ hard-flag, and the eval harness with `--no-vision`. Run `runEval --no-vision` an
 This proves the scoring math against C003/C004 (reuse) and the behavioural cases without spending a
 token. STOP.
 
-**Stage 3 — Vision + narrator.** Implement the OpenAI client (vision) and a separate SEA-LION client
-(narrator, OpenAI-compatible base URL), the Visual Claim Integrity signal
+**Stage 3 — Vision + narrator.** Implement the OpenAI client (one client, used for both the vision
+call and the text narrator call), the Visual Claim Integrity signal
 (loading `signal-1-prompt.md`, strict-JSON parse with a safe fallback), and the narrator with its
 fallback. Wire
 both into the pipeline. Run the **full** eval and report expected vs actual for all 6 claims. STOP.
@@ -269,8 +268,8 @@ clearly, and confirm the eval is still green. STOP.
 2. **No DB / auth / accounts.** JSON files only.
 3. **Never auto-decide a claim.** `ScoredClaim` and the UI buttons are advisory; a human acts.
 4. **Strip `_dev`** before any model call and before any API response.
-5. **Verify both model strings at runtime** — read the OpenAI vision model and the SEA-LION narrator
-   model from env vars (`OPENAI_API_KEY` / `SEA_LION_API_KEY` + model ids); do not hardcode guesses.
+5. **Verify both model strings at runtime** — read the OpenAI vision and narrator model ids from env
+   vars (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`, auth `OPENAI_API_KEY`); do not hardcode guesses.
 6. **Commit after every stage**; keep diffs small and reviewable.
 7. If a contract or behaviour is ambiguous, **stop and ask** — do not invent a new data shape.
 8. Build to the types above verbatim. If you think a type should change, raise it; don't silently edit.
