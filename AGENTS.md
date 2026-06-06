@@ -12,6 +12,9 @@ A refund-claim integrity system for a Shopee-style marketplace. It ingests a ref
 React frontend  ->  Node/TS backend  ->  OpenAI API
 (claim list,        (signal runner,       (vision model
  verdict card)       aggregator,           + explanation)
+React frontend  ->  Node/TS backend  ->  OpenAI (vision) + Sealion (narration)
+(claim list,        (signal runner,       (vision model
+ verdict card)       aggregator,           + explanation)
                      LLM narrator)
                           |
                   in-memory JSON data
@@ -56,6 +59,11 @@ A final OpenAI text call turns (score, band, evidences) into the reviewer explan
 ## Tech stack (do not substitute)
 
 - Backend: Node + TypeScript + Express, `openai`, `sharp`, `imghash`.
+- Frontend: React + TypeScript + Tailwind, built with Vite.
+- Data: JSON files in `mock-data/`, loaded into memory at startup.
+## Tech stack (do not substitute)
+
+- Backend: Node + TypeScript + Express, `openai` (vision), `sharp`, `imghash`, `sealion` (narration client).
 - Frontend: React + TypeScript + Tailwind, built with Vite.
 - Data: JSON files in `mock-data/`, loaded into memory at startup.
 
