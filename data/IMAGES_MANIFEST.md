@@ -1,35 +1,47 @@
-# Image Manifest - Claim-Integrity Agent
+# Image Manifest — Claim-Integrity Agent (realistic 18-claim active set)
 
-Final active image set for the demo dataset. Filenames must match `claims.json` and
-`products.json` exactly.
+Filenames must match `claims.json` / `products.json` **exactly** (case-sensitive). Ground truth lives
+only in `_dev`, never in a filename. 18 active claim images (C018 has two) + 1 reference image.
 
-- Claim images: `data/images/claims/`
-- Reference images: `data/images/reference/`
+- Claim images → `data/images/claims/`
+- Reference (pristine listing) images → `data/images/reference/`
 
-## Claim Images
+## Claim images — `data/images/claims/`
 
-| Filename | Claim | Product | Real or fake | What it shows | Role |
-|----------|-------|---------|--------------|---------------|------|
-| `shirt_seam_tear.jpg` | C001 | P001 | Real damage | Oxford shirt sleeve torn along the wrist seam | Legitimate low-risk apparel damage |
-| `visor_scratched.jpg` | C002 | P002 | AI-doctored | Tinted visor with a visible lens scratch | Suspicious new-account claim; behavioural rules raise risk |
-| `skincare_jar_cracked.jpg` | C003 and C004 | P003 | AI-doctored | Torriden skincare jar with cracking on the plastic container | Image-reuse pair; one file reused across two accounts |
-| `mug_cracked.jpg` | C005 | P004 | AI-doctored | Ceramic photo mug with visible cracking on the side | Text-image mismatch plus risky account behaviour |
-| `glass_frame_shattered.jpg` | C006 | P006 | Real damage | A4 glass photo frame shattered inside the frame | Logistics-incident cluster; physical damage is plausible |
-| `usb_hub_broken.jpg` | C007 | P007 | Real damage | USB hub connector detached from the cable | Logistics-incident cluster; plausible transit damage |
-| `monitor_cracked.jpg` | C008 | P008 | Real damage | Acer monitor with cracked LCD panel and display damage | Logistics-incident cluster; plausible transit damage |
-| `ssl2_broken.jpg` | C009 | P005 | AI-doctored | SSL 2 audio interface with radial cracks across an aluminium faceplate | Physical-implausibility hero case; High hard-flag candidate |
+| Filename | Claim | Real/fake | Role |
+|----------|-------|-----------|------|
+| `shirt_black_sleeve_rip.jpg` | C001 | fake | behaviour-only suspicious sleeve rip |
+| `visor_lens_scratch.jpg` | C003 | fake | behaviour-only suspicious visor scratch |
+| `visor_scratched_wrong_color.jpg` | C004 | real | legit visor scratch + colour mismatch |
+| `skincare_jar_cracked_closeup.jpg` | **C005 + C020** | fake | **image-reuse pair** — one file, two accounts |
+| `skincare_boxes_cracked.jpg` | C006 | fake | behaviour-only suspicious skincare claim |
+| `skincare_packaging_damaged.jpg` | C007 | real | legit skincare packaging damage |
+| `mug_print_smudged.jpg` | C009 | real | legit mug print-quality complaint |
+| `plastic_container_side_crack.jpg` | C010 | real | **logistics cluster** (1/3, ORD-2010) |
+| `plastic_container_lid_crack_closeup.jpg` | C011 | real | **logistics cluster** (2/3, ORD-2010) |
+| `plastic_container_lid_crack_blurry.jpg` | C012 | real | **logistics cluster** (3/3, ORD-2010) |
+| `glass_frame_shattered_handheld.jpg` | C013 | fake | behaviour-only suspicious glass-frame claim |
+| `glass_frame_shattered_packaging.jpg` | C014 | real | legit glass-frame transit damage |
+| `usb_hub_port_cracked.jpg` | C015 | fake | behaviour-only suspicious USB hub claim |
+| `usb_hub_connector_broken.jpg` | C016 | real | legit USB connector break |
+| `monitor_packaging_cracked.jpg` | C017 | fake | behaviour-only suspicious monitor claim |
+| `monitor_office_cracked.jpg`, `monitor_desktop_cracked.jpg` | C018 | fake | behaviour-only two-image monitor claim |
+| `ssl2_broken.jpg` | C019 | fake | **doctored-from-listing** (edited from `ssl2_intact.jpg`) + implausible metal cracks |
 
-## Reference Images
+## Reference images — `data/images/reference/`
 
-| Filename | Product | What it shows | Role |
-|----------|---------|---------------|------|
-| `ssl2_intact.jpg` | P005 | Pristine SSL 2 audio interface listing photo | Reference source for the doctored SSL 2 claim image |
+| Filename | Product | What it shows |
+|----------|---------|---------------|
+| `ssl2_intact.jpg` | P009 (SSL 2) | Pristine listing photo — the source the C019 fake was doctored from |
 
-## Signal Expectations
+P001–P008 have **no** reference image (their claims are genuine photos or behaviour/reuse cases, not doctored-from-listing).
 
-- C009 is the physical-implausibility hero case: aluminium should dent, scuff, or bend rather
-  than fracture radially across the faceplate.
-- C003 and C004 share `skincare_jar_cracked.jpg`, so ImageReuse should hard-flag the duplicate.
-- C006, C007, and C008 share `ORD-1006` with `total_claims_against_order: 3`, so Behavioural
-  Context should lower risk as a likely logistics incident.
-- Products without a pristine doctored source intentionally have no `reference_image` field.
+## How the signals fire on this set
+- **Signal 1 (visual):** stays calm on the real-damage legits (false-positive anchors); C019 is the active physical-implausibility showcase. Most fraud photos are physically plausible — that's intentional; their conviction comes from Signals 2/3.
+- **Signal 2 (pHash):** C005 ↔ C020 share one file → reuse hard flag. C019 (`ssl2_broken.jpg`) is a near-duplicate of `ssl2_intact.jpg` → doctored-from-listing hard flag.
+- **Signal 3 (behavioural):** risky accounts raise the behaviour-only frauds to Elevated; the ORD-2010 cluster (3 claims, one shipment) triggers the logistics override → Low.
+
+## Rules of thumb
+- Keep format/resolution reasonable; compute pHashes from these files at startup, never hardcode.
+- No metadata/EXIF/C2PA tricks — provenance detection is out of scope (see `AGENTS.md`).
+- Ground truth lives only in `_dev`; never encode real/fake in a filename.

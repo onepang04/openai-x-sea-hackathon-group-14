@@ -3,135 +3,270 @@
     "id": "C001",
     "account_id": "A001",
     "product_id": "P001",
-    "order_id": "ORD-1001",
+    "order_id": "ORD-2001",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "Item sleeve came in with a huge rip along the seam at the wrist section.",
-    "images": ["shirt_seam_tear.jpg"],
+    "claim_text": "item sleeve has HUGE DAMAGED rip .",
+    "images": ["shirt_black_sleeve_rip.jpg"],
     "_dev": {
-      "scenario_role": "legitimate apparel damage",
-      "ground_truth": "legitimate",
-      "expected_band": "Low",
-      "why": "plausible seam tear on cotton oxford cloth and clean account should keep risk low"
-    }
-  },
-  {
-    "id": "C002",
-    "account_id": "A002",
-    "product_id": "P002",
-    "order_id": "ORD-1002",
-    "reason_category": "damaged_or_faulty",
-    "claim_text": "The visor arrived with a scratch on the lens that blocks vision.",
-    "images": ["visor_scratched.jpg"],
-    "_dev": {
-      "scenario_role": "suspicious new-account claim",
+      "scenario_role": "behaviour-only suspicious apparel claim",
       "ground_truth": "fraudulent",
       "expected_band": "Elevated",
-      "why": "lens scratch may look plausible, but new-account and refund-rate rules should raise risk"
+      "why": "the sleeve damage is physically plausible, so no hard signal fires; the new high-velocity account raises it to Elevated for human review"
     }
   },
   {
     "id": "C003",
     "account_id": "A003",
-    "product_id": "P003",
-    "order_id": "ORD-1003",
+    "product_id": "P002",
+    "order_id": "ORD-2003",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The black moisturiser jar arrived cracked even though I ordered it new.",
-    "images": ["skincare_jar_cracked.jpg"],
+    "claim_text": "item came in with scratch on lens, blocks vision need",
+    "images": ["visor_lens_scratch.jpg"],
     "_dev": {
-      "scenario_role": "image reuse pair 1",
+      "scenario_role": "behaviour-only suspicious visor scratch",
       "ground_truth": "fraudulent",
-      "expected_band": "High",
-      "why": "same claim image appears again in C004, so ImageReuse should hard-flag it"
+      "expected_band": "Elevated",
+      "why": "scratch is physically plausible (no hard signal); the new high-velocity account raises it to Elevated"
     }
   },
   {
     "id": "C004",
     "account_id": "A004",
-    "product_id": "P003",
-    "order_id": "ORD-1004",
+    "product_id": "P002",
+    "order_id": "ORD-2004",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The moisturiser came cracked on arrival and I need a refund.",
-    "images": ["skincare_jar_cracked.jpg"],
+    "claim_text": "item besides coming scratched, came with the wrong color of what was purchased.",
+    "images": ["visor_scratched_wrong_color.jpg"],
     "_dev": {
-      "scenario_role": "image reuse pair 2",
-      "ground_truth": "fraudulent",
-      "expected_band": "High",
-      "why": "identical image to C003 from a different risky account should trigger the reuse hard flag"
+      "scenario_role": "legitimate visor condition mismatch",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "scratch and colour mismatch are plausible fulfilment issues on a clean account"
     }
   },
   {
     "id": "C005",
     "account_id": "A005",
-    "product_id": "P004",
-    "order_id": "ORD-1005",
+    "product_id": "P003",
+    "order_id": "ORD-2005",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The mug has huge cracks at the bottom part and arrived in poor condition.",
-    "images": ["mug_cracked.jpg"],
+    "claim_text": "Hahayyyyy black Po order Kong moisturiser bakit cracked pinadala nyo Yan tuloy dalawa na Yung cracked na moisturiser ko.. black sana.. na wow Mali seller salamat delivery rider ..",
+    "images": ["skincare_jar_cracked_closeup.jpg"],
     "_dev": {
-      "scenario_role": "text-image mismatch plus risky account",
+      "scenario_role": "image-reuse fraud (pair 1 of 2)",
       "ground_truth": "fraudulent",
       "expected_band": "High",
-      "why": "claim says bottom crack while image shows visible side cracks; risky account behaviour should push risk high"
+      "why": "the same claim image is filed by C020 from a different account, so the image-reuse pHash hard flag should fire"
     }
   },
   {
     "id": "C006",
     "account_id": "A006",
-    "product_id": "P006",
-    "order_id": "ORD-1006",
+    "product_id": "P003",
+    "order_id": "ORD-2006",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "Received my glass photo frame completely shattered, with large cracks and loose fragments inside the packaging.",
-    "images": ["glass_frame_shattered.jpg"],
+    "claim_text": "Hahayyyyy black Po order Kong moisturiser bakit cracked pinadala nyo Yan tuloy dalawa na Yung cracked na moisturiser ko.. black sana.. na wow Mali seller salamat delivery rider ..",
+    "images": ["skincare_boxes_cracked.jpg"],
     "_dev": {
-      "scenario_role": "logistics incident cluster - glass frame",
-      "ground_truth": "legitimate",
-      "expected_band": "Low",
-      "why": "shattered glass is physically plausible and shared-order logistics override should lower behavioural risk"
+      "scenario_role": "behaviour-only suspicious skincare claim",
+      "ground_truth": "fraudulent",
+      "expected_band": "Elevated",
+      "why": "packaging damage is plausible (no hard signal); the risky account raises it to Elevated"
     }
   },
   {
     "id": "C007",
-    "account_id": "A006",
-    "product_id": "P007",
-    "order_id": "ORD-1006",
+    "account_id": "A007",
+    "product_id": "P003",
+    "order_id": "ORD-2007",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The USB hub connector broke before any use and the product arrived unusable.",
-    "images": ["usb_hub_broken.jpg"],
+    "claim_text": "All given damaged packaging, bad quality, never put in effort to put in box, trying to save cost. I did not expect to receive my items in such quality, upset with the purchase. I am not paying for 50% off defect products. Shoppe please review the seller quality and behaviour",
+    "images": ["skincare_packaging_damaged.jpg"],
     "_dev": {
-      "scenario_role": "logistics incident cluster - USB hub",
+      "scenario_role": "legitimate skincare packaging damage",
       "ground_truth": "legitimate",
       "expected_band": "Low",
-      "why": "detached connector is plausible transit damage and the shared order should be treated as logistics, not fraud"
-    }
-  },
-  {
-    "id": "C008",
-    "account_id": "A006",
-    "product_id": "P008",
-    "order_id": "ORD-1006",
-    "reason_category": "damaged_or_faulty",
-    "claim_text": "The Acer monitor screen was already cracked when opened, with display damage straight out of the box.",
-    "images": ["monitor_cracked.jpg"],
-    "_dev": {
-      "scenario_role": "logistics incident cluster - monitor",
-      "ground_truth": "legitimate",
-      "expected_band": "Low",
-      "why": "cracked LCD damage is plausible and three claims share one order, so behavioural context should lower risk"
+      "why": "packaging damage is plausible and the buyer account is clean"
     }
   },
   {
     "id": "C009",
-    "account_id": "A005",
-    "product_id": "P005",
-    "order_id": "ORD-1007",
+    "account_id": "A009",
+    "product_id": "P004",
+    "order_id": "ORD-2009",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The audio interface arrived with the monitor knob snapped off and cracks spreading across the top panel.",
+    "claim_text": "image too small and slightly slanted. in the pic u can see theres some red ink smudges which make it look quite ugly.. but delivery was okay, ordered on sunday came on tuesday.",
+    "images": ["mug_print_smudged.jpg"],
+    "_dev": {
+      "scenario_role": "legitimate mug print-quality complaint",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "print smudge and image alignment are plausible production-quality issues on a clean account"
+    }
+  },
+  {
+    "id": "C010",
+    "account_id": "A010",
+    "product_id": "P005",
+    "order_id": "ORD-2010",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "bad product, come cracked and dirty",
+    "images": ["plastic_container_side_crack.jpg"],
+    "_dev": {
+      "scenario_role": "logistics-incident cluster (1 of 3)",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "three containers from the same shipment (ORD-2010) arrived cracked; plausible plastic damage and the shared-order override should keep risk low despite the account's velocity"
+    }
+  },
+  {
+    "id": "C011",
+    "account_id": "A010",
+    "product_id": "P005",
+    "order_id": "ORD-2010",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Product: Defective/Damaged Item, Poor quality",
+    "images": ["plastic_container_lid_crack_closeup.jpg"],
+    "_dev": {
+      "scenario_role": "logistics-incident cluster (2 of 3)",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "second container from the same shipment; rim and lid cracking is plausible and the logistics override keeps risk low"
+    }
+  },
+  {
+    "id": "C012",
+    "account_id": "A010",
+    "product_id": "P005",
+    "order_id": "ORD-2010",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Sorry, maybe the item was damaged before being sent, because there was no break in the packaging.",
+    "images": ["plastic_container_lid_crack_blurry.jpg"],
+    "_dev": {
+      "scenario_role": "logistics-incident cluster (3 of 3)",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "third container from the same shipment; plausible plastic rim damage and the shared-order override keeps the whole cluster low"
+    }
+  },
+  {
+    "id": "C013",
+    "account_id": "A013",
+    "product_id": "P006",
+    "order_id": "ORD-2013",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Glass frame came completely shattered inside the box, like someone just threw it in without any protection. Pieces everywhere when I opened. Total waste of money, very angry with this purchase. Never buying glass items from this seller again.",
+    "images": ["glass_frame_shattered_handheld.jpg"],
+    "_dev": {
+      "scenario_role": "behaviour-only suspicious glass-frame claim",
+      "ground_truth": "fraudulent",
+      "expected_band": "Elevated",
+      "why": "shattered glass is physically plausible (no hard signal); the new high-velocity account raises it to Elevated"
+    }
+  },
+  {
+    "id": "C014",
+    "account_id": "A014",
+    "product_id": "P006",
+    "order_id": "ORD-2014",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Received my glass photo frame today and was devastated to find it completely shattered upon unboxing. Large cracks running across the entire frame, glass fragments loose inside the packaging. Item is completely unusable. The packaging had no sufficient cushioning whatsoever to protect a fragile glass product during transit. Extremely disappointed, expected much better from the seller.",
+    "images": ["glass_frame_shattered_packaging.jpg"],
+    "_dev": {
+      "scenario_role": "legitimate glass-frame transit damage",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "glass shattering is physically plausible and account history is clean"
+    }
+  },
+  {
+    "id": "C015",
+    "account_id": "A015",
+    "product_id": "P007",
+    "order_id": "ORD-2015",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "one port came bare and damaged casing befores upon unwrapping, also not working not just aestehtic. disappointed",
+    "images": ["usb_hub_port_cracked.jpg"],
+    "_dev": {
+      "scenario_role": "behaviour-only suspicious USB hub claim",
+      "ground_truth": "fraudulent",
+      "expected_band": "Elevated",
+      "why": "port damage is plausible (no hard signal); the new account with repeated electronics claims raises it to Elevated"
+    }
+  },
+  {
+    "id": "C016",
+    "account_id": "A016",
+    "product_id": "P007",
+    "order_id": "ORD-2016",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "bruh, product broke when it come before even any uses",
+    "images": ["usb_hub_connector_broken.jpg"],
+    "_dev": {
+      "scenario_role": "legitimate USB connector break",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "detached connector is plausible transit damage and the account is clean"
+    }
+  },
+  {
+    "id": "C017",
+    "account_id": "A017",
+    "product_id": "P008",
+    "order_id": "ORD-2017",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Order this monitor last Wednesday, receive next Friday. Open box, wow, screen cracked left side! Straight out of box na. Never drop, never mishandle, I promise. Damage must happen before dispatch or during shipping, packaging very poor, no bubble wrap, just cardboard. Contact seller, they say \"need assess first\" before do anything. By time they reply, Shopee return window already closed! No recourse, no replacement, no refund, nothing. Zero. Cracked screen on arrival is clear defect, should not buyer absorb. Very disappointed with product condition and complete lack of accountability from seller. Would not purchase electronics through this channel again. Very sad, very angry.",
+    "images": ["monitor_packaging_cracked.jpg"],
+    "_dev": {
+      "scenario_role": "behaviour-only suspicious monitor claim",
+      "ground_truth": "fraudulent",
+      "expected_band": "Elevated",
+      "why": "cracked LCD is physically plausible (no hard signal); the new risky account on a high-value item raises it to Elevated"
+    }
+  },
+  {
+    "id": "C018",
+    "account_id": "A018",
+    "product_id": "P008",
+    "order_id": "ORD-2018",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Ordered this Acer monitor on a Friday and received it the following Tuesday. Item was intended as a birthday gift, so it was only opened about 2 weeks later. Upon unboxing, the screen was already cracked straight out of the box. This indicates the product was either damaged before delivery or insufficiently protected during shipping. Reached out to Acer Support and was told that cracked screens are not covered under warranty, regardless of condition upon first use. At the same time, Shopee declined any return or exchange as the return window had passed. This creates a complete gap in consumer protection. A defective product with zero accountability from both manufacturer and platform. Buyers take note: if you do not open and test immediately, you risk being stuck with a damaged item and no recourse. Extremely disappointing experience and not acceptable for a brand like Acer or a platform like Shopee",
+    "images": ["monitor_office_cracked.jpg", "monitor_desktop_cracked.jpg"],
+    "_dev": {
+      "scenario_role": "behaviour-only two-image monitor claim",
+      "ground_truth": "fraudulent",
+      "expected_band": "Elevated",
+      "why": "cracked LCD is plausible across both photos (no hard signal); the risky account on a high-value item raises it to Elevated for review"
+    }
+  },
+  {
+    "id": "C019",
+    "account_id": "A011",
+    "product_id": "P009",
+    "order_id": "ORD-2011",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "The audio interface arrived with the monitor knob snapped off and the top panel cracked all around it.",
     "images": ["ssl2_broken.jpg"],
     "_dev": {
-      "scenario_role": "physical implausibility hero case",
+      "scenario_role": "doctored-from-listing fraud (image-reuse vs reference + implausible physics)",
       "ground_truth": "fraudulent",
       "expected_band": "High",
-      "why": "aluminium dents or scuffs instead of fracturing radially, and the damage image was doctored from ssl2_intact.jpg"
+      "why": "the claim photo is doctored from the product listing image (ssl2_intact.jpg) so the reference pHash hard flag should fire; radial cracks across an aluminium faceplate are also physically implausible for metal"
+    }
+  },
+  {
+    "id": "C020",
+    "account_id": "A012",
+    "product_id": "P003",
+    "order_id": "ORD-2012",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "moisturiser arrived cracked, very disappointed, please refund me asap",
+    "images": ["skincare_jar_cracked_closeup.jpg"],
+    "_dev": {
+      "scenario_role": "image-reuse fraud (pair 2 of 2)",
+      "ground_truth": "fraudulent",
+      "expected_band": "High",
+      "why": "identical claim image to C005 filed from a different account; the image-reuse pHash hard flag should fire (cross-account recycled photo)"
     }
   }
 ]

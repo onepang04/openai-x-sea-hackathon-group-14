@@ -40,7 +40,7 @@ Person C owns the seller-facing React UI for the Claim Integrity demo. This docu
 
 - Default queue sort: Risk Score descending.
 - Default selected claim: highest-risk claim.
-- Include all 9 seeded scenarios in mocked data, while keeping the demo narrative claims easy to find through sorting and badges.
+- Include all active seeded scenarios from the live API, while keeping the demo narrative claims easy to find through sorting and badges.
 - Do not add a visible demo rail. Backup recording can use the same real UI.
 - Do not include keyboard shortcuts in the first pass.
 - Local-only workflow states are allowed for the demo:
@@ -205,7 +205,7 @@ interface SellerSession {
 - Default view opens on the highest-risk claim.
 - C003/C004 image reuse can show matched prior claim evidence when expanded.
 - C006 false-positive trap does not present as an automatic denial.
-- C007/C008 logistics incident override is visible in BehaviouralContext details when provided.
+- C010/C011/C012 logistics incident override is visible in BehaviouralContext details when provided.
 - Risk Score is whole-number and never labeled as probability.
 - Actions update local workflow state without implying backend persistence.
 - Text does not overflow buttons, badges, rows, or panels at desktop and mobile widths.

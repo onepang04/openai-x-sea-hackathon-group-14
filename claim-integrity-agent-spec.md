@@ -105,8 +105,8 @@ Over `accounts.json` / `orders.json`:
 - **Logistics-incident override:** if `order.total_claims_against_order >= 3`, treat the cluster as a
   transit incident and pull risk down to `min(risk, 0.2)`. Confidence 0.7. Evidence lists which rules fired.
 
-> ✅ **Logistics-override demo coverage.** The canonical 9-case set triggers this override: claims
-> C006/C007/C008 (glass frame, USB hub, monitor) all share order ORD-1006 against account A006, whose
+> ✅ **Logistics-override demo coverage.** The canonical active set triggers this override: claims
+> C010/C011/C012 (plastic containers) all share order ORD-2010 against account A010, whose
 > `claims_last_30_days: 3` would otherwise read risky — so the override pulls the cluster to Low. This
 > is the headline example from the Q1 answer, now demoable live.
 
@@ -161,23 +161,20 @@ React + Vite + Tailwind  ->  Node + TS + Express  ->  OpenAI  (vision: Signal 1)
 
 ---
 
-## Final Demo Scenarios (9)
+## Active Demo Dataset
 
-| Claim | Product | Type | Role | Expected band |
-|-------|---------|------|------|---------------|
-| C001 | Oxford shirt | **real** seam tear | legitimate apparel; clean account | **Low** |
-| C002 | helmet visor | suspicious | plausible scratch, but new-account behaviour raises it | Elevated |
-| C003 + C004 | skincare jar | reused image, two accounts | image-reuse hard flag | High |
-| C005 | ceramic mug | text-image mismatch | claim says bottom crack, image shows side; risky account | High |
-| C006 | glass photo frame | **real** shattered glass | logistics cluster + false-positive trap | **Low** |
-| C007 | USB hub | **real** transit damage | logistics cluster | **Low** |
-| C008 | monitor | **real** cracked LCD | logistics cluster | **Low** |
-| C009 | SSL 2 audio interface | AI-doctored | clear fraud — radial cracks impossible in metal; doctored from listing | High |
+The locked source of truth is `data/CANONICAL_DATASET.md`: 18 active claims, with stable IDs and two
+ambiguous claims removed from the active demo/eval surface.
 
-Accounts: A001 (clean, files C001), A002 (new account, C002), A003 + A004 (reuse-ring, C003/C004),
-A005 (risky, files C005 + C009), A006 (clean long-stander, files the C006/C007/C008 logistics cluster).
+| Claims | Product/theme | Role | Expected band |
+|--------|---------------|------|---------------|
+| C001, C003, C006, C013, C015, C017, C018 | plausible damage on risky accounts | behaviour-only frauds | Elevated |
+| C004, C007, C009, C014, C016 | plausible real damage or fulfilment issues | false-positive anchors | Low |
+| C005 + C020 | skincare | image-reuse hard flag | High |
+| C010/C011/C012 | plastic containers | logistics cluster override | Low |
+| C019 | SSL 2 audio interface | doctored-from-listing hard flag | High |
+
 Image filenames per `data/IMAGES_MANIFEST.md` — neutral names; ground truth lives only in `_dev`.
-The full locked set is `data/CANONICAL_DATASET.md`.
 
 ---
 
@@ -185,13 +182,13 @@ The full locked set is `data/CANONICAL_DATASET.md`.
 
 1. (10s) **Hook/login:** seller logs in and lands on the dashboard. "AI is being used to attack the refund system — buyers submit AI-generated photos
    of damage that doesn't exist. We use AI to defend it."
-2. (20s) **Clear fraud (C009):** the SSL 2 with cracks fanning across the metal faceplate. High band;
-   the reasoning quotes the physics — metal dents and scuffs, it doesn't fracture radially.
-3. (20s) **Image reuse (C003/C004):** the same skincare-jar photo across two accounts. Hard flag fires.
-4. (20s) **Logistics override (C006/C007/C008):** an account with three recent claims looks like a
+2. (20s) **Clear fraud (C019):** the SSL 2 image matches the product reference and may show impossible
+   metal cracking. High band; the reasoning explains why this needs seller review.
+3. (20s) **Image reuse (C005/C020):** the same skincare-jar photo across two accounts. Hard flag fires.
+4. (20s) **Logistics override (C010/C011/C012):** an account with three recent claims looks like a
    serial returner — but all three share one order and delivery date. The override reads it as a transit
    incident and pulls the cluster to Low. "Route to logistics, not fraud."
-5. (15s) **False-positive trap (C006):** that shattered glass is genuinely real — looks alarming, lands
+5. (15s) **False-positive trap (C014):** shattered glass can be genuinely real — looks alarming, lands
    **Low**. "Calibrated, not trigger-happy."
 
 Takeaway slide: "What takes ~3 days to investigate, our agent triages in ~5 seconds — for the seller to verify."

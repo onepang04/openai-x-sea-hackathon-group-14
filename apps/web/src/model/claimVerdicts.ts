@@ -8,6 +8,7 @@ import type {
   ClaimVerdictView,
   EvidenceImage,
   RecommendedAction,
+  SellerSession,
   SignalName,
   SignalView,
 } from "../types";
@@ -15,6 +16,14 @@ import type {
 const DEFAULT_DEV_API_BASE_URL = "http://localhost:3000";
 
 export const apiBaseUrl = getApiBaseUrl();
+
+export async function loginSeller(email: string): Promise<SellerSession> {
+  return requestJson<SellerSession>("/api/seller/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}
 
 export async function loadClaimVerdicts(): Promise<ClaimVerdictView[]> {
   const claims = await requestJson<PublicClaim[]>("/api/claims");

@@ -81,7 +81,7 @@ A final **OpenAI** text call turns (score, band, evidences) into the seller-faci
 
 ## Conventions
 
-- The demo dataset is LOCKED in `data/CANONICAL_DATASET.md` (claim IDs C001-C009, products, expected bands). Build every stream to it; it overrides any older 6-scenario list in the spec.
+- The demo dataset is LOCKED in `data/CANONICAL_DATASET.md` (18 active claims: C001–C020 excluding C002 and C008, products, expected bands). Build every stream to it; it overrides any older scenario list in the spec.
 - The demo seller may own all seeded products unless a separate seller/product ownership map is added deliberately.
 - Keep each signal in its own file under `src/signals/`.
 - The aggregator must not know what any signal *is* — it only consumes `SignalResult[]`.

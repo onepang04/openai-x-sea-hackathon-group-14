@@ -102,7 +102,7 @@ C006 | photo frame  | expected Low       | actual Low   14  hard_flag: none     
 C009 | SSL 2        | expected High      | actual High  92  hard_flag: visual_implausibility   PASS
 ```
 
-**C001 and C006/C007/C008 landing Low is the accuracy gate.** Treat a regression there as a build-breaker.
+**The active legitimate claims and C010/C011/C012 logistics cluster landing Low is the accuracy gate.** Treat a regression there as a build-breaker.
 
 ---
 

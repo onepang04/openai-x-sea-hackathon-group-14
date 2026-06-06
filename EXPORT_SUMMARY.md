@@ -41,18 +41,17 @@ See `AGENTS.md` and `claim-integrity-agent-spec.md`.
 2. Aggregate available signals; apply hard flags.
 3. OpenAI narration (with fallback) → 2–3 sentence explanation + recommended action.
 
-## Demo scenarios (9)
+## Demo scenarios
 
-| Claim | Product | Role | Expected |
-|-------|---------|------|----------|
-| C001 | Oxford shirt | legitimate apparel damage | **Low** |
-| C002 | helmet visor | suspicious new-account claim | Elevated |
-| C003 + C004 | skincare set | reused image pair | High |
-| C005 | ceramic mug | text-image mismatch plus risky account | High |
-| C006 | glass photo frame | real shattered glass, logistics cluster | **Low** |
-| C007 | USB hub | real transit damage, logistics cluster | **Low** |
-| C008 | monitor | real transit damage, logistics cluster | **Low** |
-| C009 | SSL 2 audio interface | physical-implausibility hero case | High |
+The active demo set is locked in `data/CANONICAL_DATASET.md`.
+
+| Claims | Product/theme | Role | Expected |
+|--------|---------------|------|----------|
+| C001, C003, C006, C013, C015, C017, C018 | plausible damage on risky accounts | behaviour-only review queue | Elevated |
+| C004, C007, C009, C014, C016 | plausible real damage or fulfilment issues | false-positive anchors | **Low** |
+| C005 + C020 | skincare set | reused image pair | High |
+| C010/C011/C012 | plastic containers | logistics override | **Low** |
+| C019 | SSL 2 audio interface | doctored-from-listing hero case | High |
 
 ## API contract (locked)
 

@@ -2,8 +2,8 @@
 
 Hackathon demo for refund-claim integrity triage in a Shopee-style marketplace.
 A seller logs in, sees buyer refund claims for the seller's products, and uses
-the triage dashboard to verify them. Given a buyer refund claim, image(s),
-product, account, and order context, the system produces a whole-number
+the triage dashboard to verify them. Given a webhook-fed buyer refund claim,
+claim evidence image(s), product, account, and order context, the system produces a whole-number
 **Risk Score**, a Low/Elevated/High band, per-signal evidence, and a
 seller-facing explanation.
 

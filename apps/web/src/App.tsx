@@ -36,8 +36,7 @@ import type {
   SignalView,
   WorkflowState,
 } from "./types";
-import { loadClaimVerdicts } from "./model/claimVerdicts";
-import { mockVerdicts } from "./data/mockVerdicts";
+import { loadClaimVerdicts, loginSeller } from "./model/claimVerdicts";
 
 const DEMO_SELLER_EMAIL = "seller@demo.local";
 
@@ -167,16 +166,6 @@ function App() {
     }));
   }
 
-  function applyVerdicts(loadedVerdicts: ClaimVerdictView[]) {
-    setVerdicts(loadedVerdicts);
-    setWorkflowByClaim(
-      Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
-    );
-    setSelectedId(getDefaultClaimId(loadedVerdicts));
-    setActiveImageIndex(0);
-    setExpandedSignal("VisualClaimIntegrity");
-  }
-
   function clearVerdicts() {
     setVerdicts([]);
     setWorkflowByClaim({});
@@ -186,28 +175,27 @@ function App() {
     setExpandedSignal("VisualClaimIntegrity");
   }
 
-  function handleEngineLogin(email: string) {
+  async function handleEngineLogin(email: string) {
     clearVerdicts();
-    setSellerSession({
+    const fallbackSession: SellerSession = {
       id: "seller-demo",
       displayName: "Demo Seller",
       shopName: "Northstar Devices",
       email,
-    });
+    };
+
+    try {
+      setSellerSession(await loginSeller(email));
+    } catch {
+      setSellerSession(fallbackSession);
+    }
+
     setLoadState({ status: "idle" });
     setScreen("dashboard");
   }
 
   function handleDemoLogin() {
-    applyVerdicts(mockVerdicts);
-    setSellerSession({
-      id: "seller-demo",
-      displayName: "Demo Seller",
-      shopName: "Northstar Devices",
-      email: DEMO_SELLER_EMAIL,
-    });
-    setLoadState({ status: "ready", source: "demo" });
-    setScreen("dashboard");
+    handleEngineLogin(DEMO_SELLER_EMAIL);
   }
 
   function handleSignOut() {

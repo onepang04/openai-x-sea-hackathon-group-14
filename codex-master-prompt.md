@@ -11,9 +11,10 @@
 
 Build a **seller-facing refund-claim integrity triage tool** for a marketplace (Shopee context).
 A seller logs in, sees refund claims submitted by buyers for the seller's products, and verifies each
-claim with triage support. Given a refund claim — claim text, reason category, buyer-uploaded image(s),
-plus account/order/product context — it produces a **0–100 Risk Score**, a **band** (Low / Elevated /
-High), a per-signal breakdown, and a short plain-English explanation written for the seller.
+claim with triage support. Given a webhook-fed refund claim — claim text, reason category, claim
+evidence image(s), plus account/order/product context — it produces a **0–100 Risk Score**, a **band**
+(Low / Elevated / High), a per-signal breakdown, and a short plain-English explanation written for
+the seller.
 
 It is a **triage aid, not a judge.** It never auto-approves or auto-rejects. The seller makes the call.
 
@@ -36,7 +37,7 @@ A small monorepo:
 /AGENTS.md                 # context (already present)
 /signal-1-prompt.md        # the vision system prompt (present)
 /data/                     # products.json, accounts.json, orders.json, claims.json (present)
-/data/images/claims/       # buyer-uploaded claim photos (present)
+/data/images/claims/       # claim evidence photos from webhook-fed records (present)
 /data/images/reference/    # pristine listing photos (present)
 /apps/api/                 # Node + TypeScript + Express backend  ← build this
 /apps/web/                 # React + Vite seller login + dashboard ← build this
@@ -222,19 +223,18 @@ runs the full pipeline, and prints a table of **claimId · expected band (from `
 · actual band · PASS/FAIL**. Add a `--no-vision` flag that skips the OpenAI vision signal so you can
 test the deterministic spine without burning API calls. **Run this after every change.**
 
-The 9 canonical demo claims and their expected outcomes:
-| Claim | Product | Expected band |
-|-------|---------|---------------|
-| C001 | Oxford shirt | **Low** |
-| C002 | helmet visor | Elevated |
-| C003 / C004 | skincare set, reused image | High |
-| C005 | ceramic mug, text-image mismatch | High |
-| C006 | glass photo frame, logistics cluster | **Low** |
-| C007 | USB hub, logistics cluster | **Low** |
-| C008 | monitor, logistics cluster | **Low** |
-| C009 | SSL 2 interface, impossible metal cracks | High |
+The canonical active dataset lives in `data/CANONICAL_DATASET.md`: 18 active claims, stable IDs, and
+the current expected outcomes.
 
-The legitimate cases (C001, C006, C007, C008) landing **Low** is the make-or-break demo moment.
+| Claims | Product/theme | Expected band |
+|--------|---------------|---------------|
+| C001, C003, C006, C013, C015, C017, C018 | behaviour-only frauds | Elevated |
+| C004, C007, C009, C014, C016 | false-positive anchors | **Low** |
+| C005 / C020 | skincare set, reused image | High |
+| C010/C011/C012 | logistics cluster | **Low** |
+| C019 | SSL 2 interface, doctored-from-listing | High |
+
+The active legitimate claims and logistics cluster landing **Low** is the make-or-break demo moment.
 Treat any regression there as a build-breaker.
 
 ---
