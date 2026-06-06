@@ -37,6 +37,7 @@ import type {
   WorkflowState,
 } from "./types";
 import { loadClaimVerdicts, loginSeller } from "./model/claimVerdicts";
+import { mockVerdicts } from "./data/mockVerdicts";
 
 const DEMO_SELLER_EMAIL = "seller@demo.local";
 
@@ -175,6 +176,17 @@ function App() {
     setExpandedSignal("VisualClaimIntegrity");
   }
 
+  function applyVerdicts(loadedVerdicts: ClaimVerdictView[], source: "api" | "demo") {
+    setVerdicts(loadedVerdicts);
+    setWorkflowByClaim(
+      Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
+    );
+    setSelectedId(getDefaultClaimId(loadedVerdicts));
+    setActiveImageIndex(0);
+    setExpandedSignal("VisualClaimIntegrity");
+    setLoadState({ status: "ready", source });
+  }
+
   async function handleEngineLogin(email: string) {
     clearVerdicts();
     const fallbackSession: SellerSession = {
@@ -195,7 +207,15 @@ function App() {
   }
 
   function handleDemoLogin() {
-    handleEngineLogin(DEMO_SELLER_EMAIL);
+    clearVerdicts();
+    setSellerSession({
+      id: "seller-demo",
+      displayName: "Demo Seller",
+      shopName: "Northstar Devices",
+      email: DEMO_SELLER_EMAIL,
+    });
+    applyVerdicts(mockVerdicts, "demo");
+    setScreen("dashboard");
   }
 
   function handleSignOut() {
