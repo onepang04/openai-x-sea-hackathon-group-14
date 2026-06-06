@@ -7,6 +7,7 @@ A concise export of architecture, scope, and build sequence for the Claim-Integr
 - Frontend: React + Vite + Tailwind — reviewer-facing UI (claim list, verdict card).
 - Backend: Node + TypeScript + Express — signal runner, aggregator, final LLM narration.
 - Models: OpenAI vision + text models (vision call for `VisualClaimIntegrity`, LLM for reviewer prose).
+ - Models: OpenAI (vision) for `VisualClaimIntegrity`; Sealion (text) for narration/reviewer prose. Configure `OPENAI_API_KEY` for vision and `SEALION_API_KEY`/`SEALION_MODEL` for narration.
 - Data: in-memory JSON files: `claims.json`, `accounts.json`, `products.json`, `orders.json` + pHash index for images.
 - Signals (pluggable):
   - `VisualClaimIntegrity` — physical-plausibility + text-image consistency (vision model).
