@@ -2,19 +2,23 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import imghash from "imghash";
 import sharp from "sharp";
+import { products } from "../data/load";
 import type { Claim, EnrichedClaim, SignalResult } from "../types";
 import type { Signal } from "./types";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const CLAIM_IMAGE_DIR = join(REPO_ROOT, "data", "images", "claims");
+const REFERENCE_IMAGE_DIR = join(REPO_ROOT, "data", "images", "reference");
 
 const HARD_FLAG_DISTANCE = 5;
 const ELEVATED_DISTANCE = 8;
 
 interface HashEntry {
+  kind: "claim" | "reference";
   filename: string;
   hash: string;
-  claimId: string;
+  claimId?: string;
+  productId?: string;
 }
 
 interface Match {
@@ -33,7 +37,7 @@ export class ImageReuse implements Signal {
 
   async evaluate(enrichedClaim: EnrichedClaim): Promise<SignalResult> {
     const index = await this.getIndex();
-    const currentEntries = index.filter((entry) => entry.claimId === enrichedClaim.claim.id);
+    const currentEntries = index.filter((entry) => entry.kind === "claim" && entry.claimId === enrichedClaim.claim.id);
 
     if (currentEntries.length === 0) {
       return {
@@ -76,8 +80,8 @@ export class ImageReuse implements Signal {
       confidence: 0.1,
       evidence:
         minDistance === null
-          ? "No comparable claim image was available in the pHash index."
-          : `No near-duplicate claim image found; closest pHash distance was ${minDistance}.`,
+          ? "No comparable claim or reference image was available in the pHash index."
+          : `No near-duplicate claim or reference image found; closest pHash distance was ${minDistance}.`,
       raw: {
         hardFlag: false,
         matchFound: false,
@@ -93,18 +97,34 @@ export class ImageReuse implements Signal {
   }
 
   private async buildIndex(): Promise<HashEntry[]> {
-    const entries = this.claims.flatMap((claim) =>
+    const claimEntries = this.claims.flatMap((claim) =>
       claim.images.map((filename) => ({
+        kind: "claim" as const,
         filename,
         claimId: claim.id,
         path: join(CLAIM_IMAGE_DIR, filename),
       })),
     );
 
+    const referenceEntries = products.flatMap((product) => {
+      if (!product.reference_image) return [];
+
+      return [
+        {
+          kind: "reference" as const,
+          filename: product.reference_image,
+          productId: product.id,
+          path: join(REFERENCE_IMAGE_DIR, product.reference_image),
+        },
+      ];
+    });
+
     return Promise.all(
-      entries.map(async (entry) => ({
+      [...claimEntries, ...referenceEntries].map(async (entry) => ({
+        kind: entry.kind,
         filename: entry.filename,
-        claimId: entry.claimId,
+        claimId: "claimId" in entry ? entry.claimId : undefined,
+        productId: "productId" in entry ? entry.productId : undefined,
         hash: await this.hashImage(entry.path),
       })),
     );
@@ -134,7 +154,7 @@ export class ImageReuse implements Signal {
 
     for (const current of currentEntries) {
       for (const candidate of index) {
-        if (candidate.claimId === enrichedClaim.claim.id) {
+        if (candidate.kind === "claim" && candidate.claimId === enrichedClaim.claim.id) {
           continue;
         }
 
@@ -149,7 +169,11 @@ export class ImageReuse implements Signal {
   }
 
   private describeMatch(match: Match, adjective: string): string {
-    return `Found ${adjective} pHash match against claim ${match.matched.claimId} with distance ${match.distance}`;
+    if (match.matched.kind === "reference") {
+      return `Claim image is a ${adjective} of product listing photo ${match.matched.filename} (doctored-from-listing), pHash distance ${match.distance}`;
+    }
+
+    return `Claim image is a ${adjective} of claim ${match.matched.claimId}, pHash distance ${match.distance}`;
   }
 
   private buildRaw(match: Match, hardFlag: boolean, reason: string) {
@@ -169,9 +193,11 @@ export class ImageReuse implements Signal {
 
   private toRawMatch(entry: HashEntry, distance: number) {
     return {
-      kind: "claim",
+      kind: entry.kind,
       filename: entry.filename,
-      claimId: entry.claimId,
+      claimId: entry.claimId ?? null,
+      productId: entry.productId ?? null,
+      sourceId: entry.kind === "claim" ? entry.claimId ?? null : entry.productId ?? null,
       distance,
     };
   }

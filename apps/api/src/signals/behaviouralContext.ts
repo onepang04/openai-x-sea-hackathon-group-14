@@ -37,6 +37,8 @@ export const behaviouralContext: Signal = {
       evidence: buildEvidence(triggeredRules, logisticsOverride, order.id, order.total_claims_against_order),
       raw: {
         hardFlag: false,
+        accountAgeDays: account.account_age_days,
+        claimsLast30Days: account.claims_last_30_days,
         refundRate,
         triggeredRules,
         logisticsOverride,
@@ -44,6 +46,7 @@ export const behaviouralContext: Signal = {
         totalClaimsAgainstOrder: order.total_claims_against_order,
         baseRisk,
         finalRisk,
+        override: logisticsOverride ? "Shared-order logistics override lowered behavioural risk." : undefined,
       },
     };
   },
