@@ -8,7 +8,6 @@ import {
   Eye,
   FileText,
   ImageIcon,
-  LockKeyhole,
   Mail,
   Package,
   Search,
@@ -74,20 +73,12 @@ function App() {
       return;
     }
 
-    let isCancelled = false;
-
     setLoadState({ status: "loading", progress: { total: 0, completed: 0, cached: false } });
 
     loadClaimVerdicts((progress) => {
-      if (!isCancelled) {
-        setLoadState({ status: "loading", progress });
-      }
+      setLoadState({ status: "loading", progress });
     })
       .then((loadedVerdicts) => {
-        if (isCancelled) {
-          return;
-        }
-
         setVerdicts(loadedVerdicts);
         setWorkflowByClaim(
           Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
@@ -96,16 +87,8 @@ function App() {
         setLoadState({ status: "ready", source: "api" });
       })
       .catch((error: unknown) => {
-        if (isCancelled) {
-          return;
-        }
-
         setLoadState({ status: "error", message: error instanceof Error ? error.message : "Unknown API error" });
       });
-
-    return () => {
-      isCancelled = true;
-    };
   }, [loadState.status, screen, reviewerSession, verdicts.length]);
 
   const queueItems = useMemo(
@@ -228,10 +211,7 @@ function App() {
 
   if (screen === "login" || !reviewerSession) {
     return (
-      <LoginScreen
-        onDemoLogin={handleDemoLogin}
-        onEngineLogin={handleReviewerLogin}
-      />
+      <LoginScreen onDemoLogin={handleDemoLogin} onEngineLogin={handleReviewerLogin} />
     );
   }
 
@@ -294,7 +274,7 @@ function LoginScreen({
   onDemoLogin: () => void;
   onEngineLogin: (email: string) => void;
 }) {
-  const [email, setEmail] = useState(DEMO_REVIEWER_EMAIL);
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
   function submitLogin(event: FormEvent<HTMLFormElement>) {
@@ -324,23 +304,10 @@ function LoginScreen({
               <p className="text-xs text-zinc-500">Shopee reviewer dashboard</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400 sm:flex">
-              <LockKeyhole className="h-4 w-4 text-zinc-500" aria-hidden="true" />
-              Demo access
-            </div>
-            <button
-              className="inline-flex min-h-10 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
-              type="button"
-              onClick={onDemoLogin}
-            >
-              Open demo
-            </button>
-          </div>
         </header>
 
         <main className="login-hero mt-4 flex flex-1 overflow-hidden rounded-lg border border-zinc-800">
-          <section className="login-hero__content grid min-h-[calc(100svh-112px)] w-full gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(380px,480px)] lg:items-center lg:px-10">
+          <section className="login-hero__content grid min-h-[calc(100svh-112px)] w-full gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] lg:items-center lg:px-10">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-md border border-zinc-700/80 bg-zinc-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-300">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]" />
@@ -352,36 +319,9 @@ function LoginScreen({
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-200 sm:text-lg">
                 A Shopee reviewer workspace for refund-claim risk scoring, evidence review, and advisory actions.
               </p>
-
-              <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
-                <HeroMetric label="High-risk case" value="C019" tone="high" />
-                <HeroMetric label="Risk Score" value="92" tone="high" />
-                <HeroMetric label="Demo fallback" value="Ready" tone="low" />
-              </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="login-preview" aria-hidden="true">
-                <div className="login-preview__image">
-                  <img src="/evidence/claims/ssl2_broken.jpg" alt="" />
-                </div>
-                <div className="login-preview__body">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Selected claim</p>
-                    <p className="mt-1 text-sm font-semibold text-white">Solid State Logic SSL 2 USB Audio Interface</p>
-                  </div>
-                  <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-right">
-                    <p className="text-2xl font-semibold leading-none text-red-300">92</p>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-red-100/70">Risk Score</p>
-                  </div>
-                </div>
-                <div className="login-preview__signals">
-                  <span>Physical implausibility</span>
-                  <span>Reference match</span>
-                  <span>SynthID watermark</span>
-                </div>
-              </div>
-
+            <div>
               <form className="login-card p-5 sm:p-6" onSubmit={submitLogin}>
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100">
@@ -389,7 +329,7 @@ function LoginScreen({
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-white">Reviewer login</h2>
-                    <p className="text-sm text-zinc-500">Shopee Review Ops demo account</p>
+                    <p className="text-sm text-zinc-500">Shopee Review Ops</p>
                   </div>
                 </div>
 
@@ -400,6 +340,7 @@ function LoginScreen({
                     <input
                       className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
                       inputMode="email"
+                      placeholder="Enter reviewer email"
                       type="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
@@ -413,50 +354,27 @@ function LoginScreen({
                   </p>
                 ) : null}
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="mt-6 grid gap-3">
                   <button
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-zinc-100 bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-950 transition-transform duration-150 ease-out-strong active:scale-[0.97]"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-zinc-100 bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-950 transition-transform duration-150 ease-out-strong active:scale-[0.97]"
                     type="submit"
                   >
                     Load live API
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <button
-                    className="inline-flex min-h-12 items-center justify-center rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-semibold text-zinc-200 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-semibold text-zinc-200 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
                     type="button"
                     onClick={onDemoLogin}
                   >
-                    Open demo dashboard
+                    Live demo
                   </button>
-                </div>
-
-                <div className="mt-5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm leading-5 text-emerald-100">
-                  Demo fallback stays local and does not depend on the live API.
                 </div>
               </form>
             </div>
           </section>
         </main>
       </div>
-    </div>
-  );
-}
-
-function HeroMetric({
-  label,
-  tone,
-  value,
-}: {
-  label: string;
-  tone: "high" | "low";
-  value: string;
-}) {
-  return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 px-4 py-3">
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">{label}</p>
-      <p className={cx("mt-2 text-xl font-semibold leading-none", tone === "high" ? "text-red-300" : "text-emerald-300")}>
-        {value}
-      </p>
     </div>
   );
 }
