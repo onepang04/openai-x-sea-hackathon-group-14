@@ -3,7 +3,7 @@ import cors from "cors";
 import express from "express";
 import { join } from "path";
 import { DATA_DIR, claims, getEnrichedClaim, sanitizeClaim, toPublicEnrichedClaim } from "./data/load";
-import { scoreClaimStub } from "./scoring/stub";
+import { scoreClaim } from "./scoring/pipeline";
 
 // The workspace runs with cwd apps/api, so load the repo-root .env explicitly
 // (OPENAI_API_KEY + OPENAI_VISION_MODEL for the Signal 1 vision call).
@@ -29,17 +29,17 @@ app.get("/api/claims/:id", (req, res) => {
   }
 });
 
-async function scoreClaim(req: express.Request, res: express.Response) {
+async function scoreClaimHandler(req: express.Request, res: express.Response) {
   try {
     const enrichedClaim = getEnrichedClaim(req.params.id);
-    res.json(await scoreClaimStub(enrichedClaim, claims));
+    res.json(await scoreClaim(enrichedClaim));
   } catch (error) {
     res.status(404).json({ error: (error as Error).message });
   }
 }
 
-app.post("/api/claim/:id/score", scoreClaim);
-app.post("/api/claims/:id/score", scoreClaim);
+app.post("/api/claims/:id/score", scoreClaimHandler);
+app.post("/api/claim/:id/score", scoreClaimHandler);
 
 const port = process.env.PORT ?? "3000";
 
