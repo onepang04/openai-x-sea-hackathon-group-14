@@ -48,6 +48,19 @@
     "price_sgd": 16
   },
   {
+    "id": "P005",
+    "name": "Solid State Logic SSL 2 USB Audio Interface",
+    "category": "Audio",
+    "material": "aluminium chassis with plastic control knobs",
+    "typical_failure_modes": [
+      "a knob cracks or pulls off the potentiometer shaft",
+      "scuffs, scratches, or dents on the metal faceplate",
+      "bent or damaged rear I/O connectors"
+    ],
+    "price_sgd": 399,
+    "reference_image": "ssl2_intact.jpg"
+  },
+  {
     "id": "P006",
     "name": "A4 Glass Photo Frame",
     "category": "Home & Living",

@@ -6,7 +6,7 @@
     "order_id": "ORD-1001",
     "reason_category": "damaged_or_faulty",
     "claim_text": "Item sleeve came in with a huge rip along the seam at the wrist section.",
-    "images": ["P001-real.jpg"],
+    "images": ["shirt_seam_tear.jpg"],
     "_dev": {
       "scenario_role": "legitimate apparel damage",
       "ground_truth": "legitimate",
@@ -21,7 +21,7 @@
     "order_id": "ORD-1002",
     "reason_category": "damaged_or_faulty",
     "claim_text": "The visor arrived with a scratch on the lens that blocks vision.",
-    "images": ["P002-fake.jpg"],
+    "images": ["visor_scratched.jpg"],
     "_dev": {
       "scenario_role": "suspicious new-account claim",
       "ground_truth": "fraudulent",
@@ -36,7 +36,7 @@
     "order_id": "ORD-1003",
     "reason_category": "damaged_or_faulty",
     "claim_text": "The black moisturiser jar arrived cracked even though I ordered it new.",
-    "images": ["P003b-fake.jpg"],
+    "images": ["skincare_jar_cracked.jpg"],
     "_dev": {
       "scenario_role": "image reuse pair 1",
       "ground_truth": "fraudulent",
@@ -51,7 +51,7 @@
     "order_id": "ORD-1004",
     "reason_category": "damaged_or_faulty",
     "claim_text": "The moisturiser came cracked on arrival and I need a refund.",
-    "images": ["P003b-fake.jpg"],
+    "images": ["skincare_jar_cracked.jpg"],
     "_dev": {
       "scenario_role": "image reuse pair 2",
       "ground_truth": "fraudulent",
@@ -66,7 +66,7 @@
     "order_id": "ORD-1005",
     "reason_category": "damaged_or_faulty",
     "claim_text": "The mug has huge cracks at the bottom part and arrived in poor condition.",
-    "images": ["P004-fake.jpg"],
+    "images": ["mug_cracked.jpg"],
     "_dev": {
       "scenario_role": "text-image mismatch plus risky account",
       "ground_truth": "fraudulent",
@@ -81,7 +81,7 @@
     "order_id": "ORD-1006",
     "reason_category": "damaged_or_faulty",
     "claim_text": "Received my glass photo frame completely shattered, with large cracks and loose fragments inside the packaging.",
-    "images": ["P006-real.jpg"],
+    "images": ["glass_frame_shattered.jpg"],
     "_dev": {
       "scenario_role": "logistics incident cluster - glass frame",
       "ground_truth": "legitimate",
@@ -96,7 +96,7 @@
     "order_id": "ORD-1006",
     "reason_category": "damaged_or_faulty",
     "claim_text": "The USB hub connector broke before any use and the product arrived unusable.",
-    "images": ["P007-real.jpg"],
+    "images": ["usb_hub_broken.jpg"],
     "_dev": {
       "scenario_role": "logistics incident cluster - USB hub",
       "ground_truth": "legitimate",
@@ -111,12 +111,27 @@
     "order_id": "ORD-1006",
     "reason_category": "damaged_or_faulty",
     "claim_text": "The Acer monitor screen was already cracked when opened, with display damage straight out of the box.",
-    "images": ["P008a-real.jpg"],
+    "images": ["monitor_cracked.jpg"],
     "_dev": {
       "scenario_role": "logistics incident cluster - monitor",
       "ground_truth": "legitimate",
       "expected_band": "Low",
       "why": "cracked LCD damage is plausible and three claims share one order, so behavioural context should lower risk"
+    }
+  },
+  {
+    "id": "C009",
+    "account_id": "A005",
+    "product_id": "P005",
+    "order_id": "ORD-1007",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "The audio interface arrived with the monitor knob snapped off and cracks spreading across the top panel.",
+    "images": ["ssl2_broken.jpg"],
+    "_dev": {
+      "scenario_role": "physical implausibility hero case",
+      "ground_truth": "fraudulent",
+      "expected_band": "High",
+      "why": "aluminium dents or scuffs instead of fracturing radially, and the damage image was doctored from ssl2_intact.jpg"
     }
   }
 ]
