@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { mockVerdicts } from "./data/mockVerdicts";
 import {
   applyQueueControls,
   getDefaultClaimId,
@@ -31,6 +30,7 @@ import type {
   SignalView,
   WorkflowState,
 } from "./types";
+import { loadClaimVerdicts } from "./model/claimVerdicts";
 
 const actionToWorkflow: Record<RecommendedAction, WorkflowState> = {
   Release: "Released",
@@ -38,22 +38,56 @@ const actionToWorkflow: Record<RecommendedAction, WorkflowState> = {
   Escalate: "Escalated",
 };
 
+type LoadState =
+  | { status: "loading" }
+  | { status: "ready" }
+  | { status: "error"; message: string };
+
 function App() {
+  const [verdicts, setVerdicts] = useState<ClaimVerdictView[]>([]);
+  const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<QueueFilter>("All");
   const [sort, setSort] = useState<QueueSort>("Risk Score");
-  const [selectedId, setSelectedId] = useState(() => getDefaultClaimId(mockVerdicts));
-  const [workflowByClaim, setWorkflowByClaim] = useState<Record<string, WorkflowState>>(() =>
-    Object.fromEntries(mockVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
-  );
+  const [selectedId, setSelectedId] = useState("");
+  const [workflowByClaim, setWorkflowByClaim] = useState<Record<string, WorkflowState>>({});
   const [notesByClaim, setNotesByClaim] = useState<Record<string, string>>({});
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [imageMode, setImageMode] = useState<"fit" | "fill">("fit");
   const [expandedSignal, setExpandedSignal] = useState<SignalName | null>("VisualClaimIntegrity");
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    loadClaimVerdicts()
+      .then((loadedVerdicts) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setVerdicts(loadedVerdicts);
+        setWorkflowByClaim(
+          Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
+        );
+        setSelectedId(getDefaultClaimId(loadedVerdicts));
+        setLoadState({ status: "ready" });
+      })
+      .catch((error: unknown) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setLoadState({ status: "error", message: error instanceof Error ? error.message : "Unknown API error" });
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
   const queueItems = useMemo(
-    () => applyQueueControls(mockVerdicts, workflowByClaim, query, filter, sort),
-    [filter, query, sort, workflowByClaim],
+    () => applyQueueControls(verdicts, workflowByClaim, query, filter, sort),
+    [filter, query, sort, verdicts, workflowByClaim],
   );
 
   useEffect(() => {
@@ -69,21 +103,22 @@ function App() {
 
   const selectedVerdict =
     queueItems.find((verdict) => verdict.claim.id === selectedId) ??
-    mockVerdicts.find((verdict) => verdict.claim.id === selectedId) ??
+    verdicts.find((verdict) => verdict.claim.id === selectedId) ??
     queueItems[0] ??
-    mockVerdicts[0];
+    verdicts[0];
 
-  const selectedWorkflow = workflowByClaim[selectedVerdict.claim.id] ?? selectedVerdict.claim.workflowState;
-  const selectedWithWorkflow: ClaimVerdictView = {
-    ...selectedVerdict,
-    claim: {
-      ...selectedVerdict.claim,
-      workflowState: selectedWorkflow,
-    },
-  };
+  const selectedWithWorkflow = selectedVerdict
+    ? {
+        ...selectedVerdict,
+        claim: {
+          ...selectedVerdict.claim,
+          workflowState: workflowByClaim[selectedVerdict.claim.id] ?? selectedVerdict.claim.workflowState,
+        },
+      }
+    : null;
 
   const metrics = useMemo(() => {
-    const withWorkflow = mockVerdicts.map((verdict) => ({
+    const withWorkflow = verdicts.map((verdict) => ({
       ...verdict,
       claim: {
         ...verdict.claim,
@@ -99,9 +134,13 @@ function App() {
         (verdict) => verdict.claim.workflowState === "Unreviewed" && verdict.recommendedAction !== "Release",
       ).length,
     };
-  }, [workflowByClaim]);
+  }, [verdicts, workflowByClaim]);
 
   function setAction(action: RecommendedAction) {
+    if (!selectedWithWorkflow) {
+      return;
+    }
+
     setWorkflowByClaim((current) => ({
       ...current,
       [selectedWithWorkflow.claim.id]: actionToWorkflow[action],
@@ -111,7 +150,7 @@ function App() {
   return (
     <div className="app-shell min-h-screen bg-ink-950 text-zinc-100">
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <Header />
+        <Header loadState={loadState} />
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Metric label="Open claims" value={metrics.open} icon={<FileText aria-hidden="true" />} />
@@ -120,43 +159,50 @@ function App() {
           <Metric label="Needs review" value={metrics.needsReview} icon={<ShieldCheck aria-hidden="true" />} />
         </section>
 
-        <main className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[430px_minmax(0,1fr)]">
-          <QueuePanel
-            filter={filter}
-            query={query}
-            queueItems={queueItems}
-            selectedId={selectedWithWorkflow.claim.id}
-            sort={sort}
-            onFilterChange={setFilter}
-            onQueryChange={setQuery}
-            onSelect={setSelectedId}
-            onSortChange={setSort}
-          />
+        {loadState.status === "ready" && selectedWithWorkflow ? (
+          <main className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[430px_minmax(0,1fr)]">
+            <QueuePanel
+              filter={filter}
+              query={query}
+              queueItems={queueItems}
+              selectedId={selectedWithWorkflow.claim.id}
+              sort={sort}
+              onFilterChange={setFilter}
+              onQueryChange={setQuery}
+              onSelect={setSelectedId}
+              onSortChange={setSort}
+            />
 
-          <VerdictPanel
-            activeImageIndex={activeImageIndex}
-            expandedSignal={expandedSignal}
-            imageMode={imageMode}
-            note={notesByClaim[selectedWithWorkflow.claim.id] ?? ""}
-            verdict={selectedWithWorkflow}
-            onAction={setAction}
-            onExpandedSignalChange={setExpandedSignal}
-            onImageIndexChange={setActiveImageIndex}
-            onImageModeChange={setImageMode}
-            onNoteChange={(note) =>
-              setNotesByClaim((current) => ({
-                ...current,
-                [selectedWithWorkflow.claim.id]: note,
-              }))
-            }
-          />
-        </main>
+            <VerdictPanel
+              activeImageIndex={activeImageIndex}
+              expandedSignal={expandedSignal}
+              imageMode={imageMode}
+              note={notesByClaim[selectedWithWorkflow.claim.id] ?? ""}
+              verdict={selectedWithWorkflow}
+              onAction={setAction}
+              onExpandedSignalChange={setExpandedSignal}
+              onImageIndexChange={setActiveImageIndex}
+              onImageModeChange={setImageMode}
+              onNoteChange={(note) =>
+                setNotesByClaim((current) => ({
+                  ...current,
+                  [selectedWithWorkflow.claim.id]: note,
+                }))
+              }
+            />
+          </main>
+        ) : (
+          <StatusPanel loadState={loadState} />
+        )}
       </div>
     </div>
   );
 }
 
-function Header() {
+function Header({ loadState }: { loadState: LoadState }) {
+  const statusLabel =
+    loadState.status === "ready" ? "Live JSON data" : loadState.status === "loading" ? "Loading claims" : "API unavailable";
+
   return (
     <header className="flex flex-col gap-3 border-b border-zinc-800/80 pb-4 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">
@@ -169,10 +215,37 @@ function Header() {
         </div>
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
-        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]" />
-        Mock response mode
+        <span
+          className={cx(
+            "h-2 w-2 rounded-full",
+            loadState.status === "error"
+              ? "bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.45)]"
+              : "bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]",
+          )}
+        />
+        {statusLabel}
       </div>
     </header>
+  );
+}
+
+function StatusPanel({ loadState }: { loadState: LoadState }) {
+  return (
+    <main className="grid flex-1 place-items-center rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
+      <div className="max-w-lg text-center">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-800 bg-ink-900 text-zinc-400">
+          {loadState.status === "error" ? <AlertTriangle className="h-5 w-5" aria-hidden="true" /> : <FileText className="h-5 w-5" aria-hidden="true" />}
+        </div>
+        <h2 className="mt-4 text-base font-semibold text-white">
+          {loadState.status === "error" ? "Unable to load claims" : "Loading claim data"}
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-zinc-500">
+          {loadState.status === "error"
+            ? loadState.message
+            : "Connecting to the claim API and loading the final JSON dataset."}
+        </p>
+      </div>
+    </main>
   );
 }
 
@@ -421,7 +494,7 @@ function VerdictPanel({
 
           <div className="mt-4 grid gap-3 text-sm text-zinc-400 sm:grid-cols-3">
             <InfoItem icon={<User aria-hidden="true" />} label="Buyer" value={verdict.claim.buyer} />
-            <InfoItem icon={<Clock3 aria-hidden="true" />} label="Submitted" value={formatDate(verdict.claim.submittedAt)} />
+            <InfoItem icon={<Clock3 aria-hidden="true" />} label="Delivered" value={formatDate(verdict.claim.submittedAt)} />
             <InfoItem icon={<Package aria-hidden="true" />} label="Claim value" value={formatCurrency(verdict.claim.claimValue)} />
           </div>
         </div>
@@ -573,7 +646,9 @@ function EvidenceViewer({
       </div>
 
       <div className="mt-4 aspect-[4/3] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-        {failedImages[activeImage.id] ? (
+        {!activeImage ? (
+          <ImageFallback label="No evidence image returned for this claim." />
+        ) : failedImages[activeImage.id] ? (
           <ImageFallback label={activeImage.alt} />
         ) : (
           <img
@@ -631,7 +706,12 @@ function SignalsPanel({
         <span className="text-xs text-zinc-500">Weighted by confidence</span>
       </div>
       <div className="mt-4 space-y-2">
-        {signals.map((signal) => {
+        {signals.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950 px-4 py-8 text-center text-sm text-zinc-500">
+            No signal results returned yet.
+          </div>
+        ) : (
+          signals.map((signal) => {
           const isExpanded = signal.name === expandedSignal;
 
           return (
@@ -672,7 +752,8 @@ function SignalsPanel({
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
     </section>
   );

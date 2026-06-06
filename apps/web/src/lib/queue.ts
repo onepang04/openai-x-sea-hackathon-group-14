@@ -3,7 +3,7 @@ import type { ClaimVerdictView, RiskBand, WorkflowState } from "../types";
 export const queueFilters = ["All", "High", "Elevated", "Low", "Needs action"] as const;
 export type QueueFilter = (typeof queueFilters)[number];
 
-export const queueSorts = ["Risk Score", "Submitted", "Claim value"] as const;
+export const queueSorts = ["Risk Score", "Delivery date", "Claim value"] as const;
 export type QueueSort = (typeof queueSorts)[number];
 
 type WorkflowMap = Record<string, WorkflowState>;
@@ -62,7 +62,7 @@ function matchesFilter(verdict: ClaimVerdictView, filter: QueueFilter): boolean 
 }
 
 function compareVerdicts(a: ClaimVerdictView, b: ClaimVerdictView, sort: QueueSort): number {
-  if (sort === "Submitted") {
+  if (sort === "Delivery date") {
     return Date.parse(b.claim.submittedAt) - Date.parse(a.claim.submittedAt);
   }
 

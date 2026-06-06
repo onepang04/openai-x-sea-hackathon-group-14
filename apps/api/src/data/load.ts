@@ -11,7 +11,7 @@ import type {
   PublicEnrichedClaim,
 } from "../types";
 
-const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../..", "data");
+export const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../..", "data");
 
 function readJson<T>(filename: string): T {
   return JSON.parse(readFileSync(join(DATA_DIR, filename), "utf-8")) as T;
