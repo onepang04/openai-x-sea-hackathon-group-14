@@ -1,21 +1,7 @@
-# Codex config for Claim-Integrity Agent hackathon
-
-# AUTH: run `codex auth login` and sign in with ChatGPT Pro (browser flow).
-# This uses your Pro subscription — do NOT set OPENAI_API_KEY for Codex itself.
-# Keep the API key for the app's OpenAI calls (Signal 1 vision + narrator).
-
-# MODEL: commented out = Codex uses its default (recommended).
-# If you need to override, verify the exact string at runtime with `codex models`.
 model = "gpt-5.5"
-
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "medium"
 model_reasoning_summary = "concise"
 
-approval_policy = "on-request"    # Codex pauses before shell commands that need approval
-sandbox_mode = "workspace-write"  # edits inside the repo only; bounded fs/network
-
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
 file_opener = "vscode"
-
-# First message every session:
-# "Read AGENTS.md and claim-integrity-agent-spec.md. Summarise the architecture,
-#  scope, and build sequence. Do not edit files."
