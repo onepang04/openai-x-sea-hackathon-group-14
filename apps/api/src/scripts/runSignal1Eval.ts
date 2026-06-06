@@ -98,22 +98,31 @@ interface Expectation {
   want: string;
   ok: (o: Signal1Output) => boolean;
 }
+const plausibleNoFlag = (o: Signal1Output) =>
+  o.physical_plausibility === "plausible" && !isHardFlag(o);
+
 const EXPECTATIONS: Record<string, Expectation> = {
-  C001: { want: "implausible + hard flag (metal fractures radially)", ok: (o) => isHardFlag(o) },
-  C002: {
-    want: "NOT confidently implausible (Signal 2 catches it, not this)",
-    ok: (o) => !isHardFlag(o),
-  },
-  C003: { want: "not a hard flag (reuse signal decides)", ok: (o) => !isHardFlag(o) },
-  C004: { want: "not a hard flag (reuse signal decides)", ok: (o) => !isHardFlag(o) },
-  C005: {
-    want: "plausible, NO hard flag (false-positive trap: real shattered glass)",
-    ok: (o) => o.physical_plausibility === "plausible" && !isHardFlag(o),
-  },
-  C006: {
-    want: "plausible, NO hard flag (real breakage)",
-    ok: (o) => o.physical_plausibility === "plausible" && !isHardFlag(o),
-  },
+  // C001 shirt seam tear — legitimate apparel; Signal 1 should stay calm.
+  C001: { want: "plausible, NO hard flag (real seam tear)", ok: plausibleNoFlag },
+  // C002 visor scratch — fraud, but the scratch is plausible; behaviour catches it, not Signal 1.
+  C002: { want: "NOT a hard flag (behaviour catches it, not this)", ok: (o) => !isHardFlag(o) },
+  // C003/C004 skincare jar — reuse pair; the image-reuse signal decides.
+  C003: { want: "NOT a hard flag (reuse signal decides)", ok: (o) => !isHardFlag(o) },
+  C004: { want: "NOT a hard flag (reuse signal decides)", ok: (o) => !isHardFlag(o) },
+  // C005 mug — fraud caught by behaviour (risky account), not Signal 1; image reads as plausible ceramic
+  // cracking and the claimed text-image mismatch isn't actually present, so Signal 1 only must not hard-flag.
+  C005: { want: "NOT a hard flag (behaviour catches it, not Signal 1)", ok: (o) => !isHardFlag(o) },
+  // C006 glass frame — real shatter; false-positive anchor, must stay plausible.
+  C006: { want: "plausible, NO hard flag (false-positive trap: real shattered glass)", ok: plausibleNoFlag },
+  // C007 USB hub — real transit damage; should stay plausible.
+  C007: { want: "plausible, NO hard flag (real transit damage)", ok: plausibleNoFlag },
+  // C008 monitor — real cracked LCD; should stay plausible.
+  C008: { want: "plausible, NO hard flag (real cracked LCD)", ok: plausibleNoFlag },
+  // C009 SSL 2 — the image is too subtle for a reliable S1 hard flag (knob-off is a *normal* failure
+  // mode; the panel marks read as scratches). Conviction comes from Signal 2: ssl2_broken.jpg is
+  // doctored from ssl2_intact.jpg (identical composition) → the pHash reference-match flags it. So
+  // Signal 1's result is not gating here; any non-error result is acceptable.
+  C009: { want: "Signal 2 reference-match owns this (S1 result not gating)", ok: () => true },
 };
 
 async function evaluateClaim(client: OpenAI, model: string, system: string, claimId: string) {

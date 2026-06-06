@@ -6,42 +6,51 @@
     "total_orders": 28,
     "total_refunds": 2,
     "claims_last_30_days": 1,
-    "profile_note": "mostly clean — files the photo-frame false-positive-trap claim"
+    "profile_note": "clean established buyer with a plausible apparel damage claim"
   },
   {
     "id": "A002",
-    "display_name": "deals_hunter88",
-    "account_age_days": 182,
-    "total_orders": 20,
-    "total_refunds": 12,
-    "claims_last_30_days": 4,
-    "profile_note": "serial returner — high refund rate and velocity"
-  },
-  {
-    "id": "A003",
     "display_name": "newuser_4471",
-    "account_age_days": 15,
+    "account_age_days": 12,
     "total_orders": 3,
     "total_refunds": 2,
     "claims_last_30_days": 2,
-    "profile_note": "new account, early high-value claims"
+    "profile_note": "new account with early high-value damage claims"
   },
   {
-    "id": "A008",
+    "id": "A003",
     "display_name": "quickflip_store",
     "account_age_days": 47,
     "total_orders": 9,
     "total_refunds": 6,
     "claims_last_30_days": 3,
-    "profile_note": "fraud-ring account reusing a damage photo"
+    "profile_note": "risky account in the reused skincare photo pair"
   },
   {
-    "id": "A009",
+    "id": "A004",
+    "display_name": "deals_hunter88",
+    "account_age_days": 182,
+    "total_orders": 20,
+    "total_refunds": 12,
+    "claims_last_30_days": 4,
+    "profile_note": "serial returner reusing another buyer's skincare damage photo"
+  },
+  {
+    "id": "A005",
+    "display_name": "flashbuyer_221",
+    "account_age_days": 22,
+    "total_orders": 5,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "risky account with recent refund velocity"
+  },
+  {
+    "id": "A006",
     "display_name": "ahmad_collects",
     "account_age_days": 600,
     "total_orders": 50,
-    "total_refunds": 3,
-    "claims_last_30_days": 1,
-    "profile_note": "clean long-standing collector — second legitimate case"
+    "total_refunds": 4,
+    "claims_last_30_days": 3,
+    "profile_note": "clean long-standing buyer with three claims tied to one damaged delivery"
   }
 ]
