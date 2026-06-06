@@ -95,5 +95,17 @@
       "stand or housing fracture during transit"
     ],
     "price_sgd": 189
+  },
+  {
+    "id": "P009",
+    "name": "Clear Plastic Storage Container",
+    "category": "Home & Living",
+    "material": "transparent polypropylene plastic container with snap-on plastic lid",
+    "typical_failure_modes": [
+      "corner cracks or star fractures from impact",
+      "rim or lid-tab breaks from bending or compression",
+      "stress whitening around cracked or flexed plastic"
+    ],
+    "price_sgd": 12
   }
 ]
