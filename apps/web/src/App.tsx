@@ -36,7 +36,7 @@ import type {
   SignalView,
   WorkflowState,
 } from "./types";
-import { loadClaimVerdicts, loginSeller } from "./model/claimVerdicts";
+import { loadClaimVerdicts, loginSeller, type ClaimLoadProgress } from "./model/claimVerdicts";
 import { mockVerdicts } from "./data/mockVerdicts";
 
 const DEMO_SELLER_EMAIL = "seller@demo.local";
@@ -51,7 +51,7 @@ type AppScreen = "landing" | "login" | "dashboard";
 
 type LoadState =
   | { status: "idle" }
-  | { status: "loading" }
+  | { status: "loading"; progress: ClaimLoadProgress }
   | { status: "ready"; source: "api" | "demo" }
   | { status: "error"; message: string };
 
@@ -77,9 +77,13 @@ function App() {
 
     let isCancelled = false;
 
-    setLoadState({ status: "loading" });
+    setLoadState({ status: "loading", progress: { total: 0, completed: 0, cached: false } });
 
-    loadClaimVerdicts()
+    loadClaimVerdicts((progress) => {
+      if (!isCancelled) {
+        setLoadState({ status: "loading", progress });
+      }
+    })
       .then((loadedVerdicts) => {
         if (isCancelled) {
           return;
@@ -580,6 +584,20 @@ function Header({
 }
 
 function StatusPanel({ loadState }: { loadState: LoadState }) {
+  const progress = loadState.status === "loading" ? loadState.progress : null;
+  const progressPercent =
+    progress && progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 8;
+  const progressLabel = progress
+    ? progress.total > 0
+      ? `${progress.completed} of ${progress.total} claims scored`
+      : "Connecting to live verdict stream"
+    : "";
+  const progressDetail = progress?.cached
+    ? "Loading cached live verdicts."
+    : progress?.currentClaimId
+      ? `Latest completed: ${progress.currentClaimId}`
+      : "Starting live Signal 1, image reuse, and behavioural scoring.";
+
   return (
     <main className="grid flex-1 place-items-center rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
       <div className="max-w-lg text-center">
@@ -594,6 +612,28 @@ function StatusPanel({ loadState }: { loadState: LoadState }) {
             ? loadState.message
             : "Connecting to the claim API and loading the final JSON dataset."}
         </p>
+        {progress ? (
+          <div className="mt-5 text-left">
+            <div className="flex items-center justify-between gap-3 text-xs font-medium text-zinc-500">
+              <span>{progressLabel}</span>
+              <span>{progress.total > 0 ? `${progressPercent}%` : ""}</span>
+            </div>
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800"
+              role="progressbar"
+              aria-label="Live API loading progress"
+              aria-valuemin={0}
+              aria-valuemax={progress.total || 100}
+              aria-valuenow={progress.total ? progress.completed : undefined}
+            >
+              <div
+                className="h-full rounded-full bg-emerald-400 transition-all duration-300 ease-out-strong"
+                style={{ width: `${Math.max(8, Math.min(100, progressPercent))}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-zinc-600">{progressDetail}</p>
+          </div>
+        ) : null}
       </div>
     </main>
   );

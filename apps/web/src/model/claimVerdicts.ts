@@ -17,6 +17,13 @@ const DEFAULT_DEV_API_BASE_URL = "http://localhost:3000";
 
 export const apiBaseUrl = getApiBaseUrl();
 
+export interface ClaimLoadProgress {
+  total: number;
+  completed: number;
+  currentClaimId?: string;
+  cached: boolean;
+}
+
 export async function loginSeller(email: string): Promise<SellerSession> {
   return requestJson<SellerSession>("/api/seller/login", {
     method: "POST",
@@ -25,17 +32,87 @@ export async function loginSeller(email: string): Promise<SellerSession> {
   });
 }
 
-export async function loadClaimVerdicts(): Promise<ClaimVerdictView[]> {
+export async function loadClaimVerdicts(
+  onProgress?: (progress: ClaimLoadProgress) => void,
+): Promise<ClaimVerdictView[]> {
+  try {
+    return await loadClaimVerdictsStream(onProgress);
+  } catch {
+    onProgress?.({ total: 0, completed: 0, cached: false });
+  }
+
   try {
     const verdicts = await requestJson<ApiClaimVerdict[]>("/api/verdicts");
+    onProgress?.({ total: verdicts.length, completed: verdicts.length, cached: false });
     return verdicts.map(({ enrichedClaim, score }) => toClaimVerdictView(enrichedClaim, score));
   } catch {
-    return loadClaimVerdictsIndividually();
+    return loadClaimVerdictsIndividually(onProgress);
   }
 }
 
-async function loadClaimVerdictsIndividually(): Promise<ClaimVerdictView[]> {
+async function loadClaimVerdictsStream(
+  onProgress?: (progress: ClaimLoadProgress) => void,
+): Promise<ClaimVerdictView[]> {
+  const response = await fetch(`${apiBaseUrl}/api/verdicts/stream`);
+
+  if (!response.ok || !response.body) {
+    throw new Error(`${response.status} ${response.statusText}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const verdicts: ClaimVerdictView[] = [];
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.trim()) {
+        continue;
+      }
+
+      const event = JSON.parse(line) as VerdictStreamEvent;
+      if (event.type === "error") {
+        throw new Error(event.message);
+      }
+
+      if (event.type === "start" || event.type === "end") {
+        onProgress?.({
+          total: event.total,
+          completed: event.completed,
+          cached: event.cached,
+        });
+      }
+
+      if (event.type === "verdict") {
+        verdicts.push(toClaimVerdictView(event.verdict.enrichedClaim, event.verdict.score));
+        onProgress?.({
+          total: event.total,
+          completed: event.completed,
+          currentClaimId: event.verdict.score.claimId,
+          cached: event.cached,
+        });
+      }
+    }
+
+    if (done) {
+      break;
+    }
+  }
+
+  return verdicts;
+}
+
+async function loadClaimVerdictsIndividually(
+  onProgress?: (progress: ClaimLoadProgress) => void,
+): Promise<ClaimVerdictView[]> {
   const claims = await requestJson<PublicClaim[]>("/api/claims");
+  onProgress?.({ total: claims.length, completed: 0, cached: false });
+  let completed = 0;
 
   const verdicts = await Promise.all(
     claims.map(async (claim) => {
@@ -44,6 +121,8 @@ async function loadClaimVerdictsIndividually(): Promise<ClaimVerdictView[]> {
         requestScore(claim.id),
       ]);
 
+      completed += 1;
+      onProgress?.({ total: claims.length, completed, currentClaimId: claim.id, cached: false });
       return toClaimVerdictView(enrichedClaim, score);
     }),
   );
@@ -55,6 +134,12 @@ interface ApiClaimVerdict {
   enrichedClaim: PublicEnrichedClaim;
   score: ScoredClaim;
 }
+
+type VerdictStreamEvent =
+  | { type: "start"; total: number; completed: number; cached: boolean }
+  | { type: "verdict"; total: number; completed: number; cached: boolean; verdict: ApiClaimVerdict }
+  | { type: "end"; total: number; completed: number; cached: boolean }
+  | { type: "error"; message: string };
 
 async function requestScore(claimId: string): Promise<ScoredClaim> {
   try {
