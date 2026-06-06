@@ -11,11 +11,12 @@
 
 ## TL;DR
 
-A vision-language reasoning agent that triages Shopee-style refund claims for integrity, with
-physical-plausibility reasoning as its core differentiator. Output is a **0–100 Risk Score** plus a
-band (Low / Elevated / High) mapped to actions, with a plain-language explanation, surfaced to a
-human reviewer — not an auto-reject. Designed to counter the rising scam of AI-generated fake damage
-photos by reasoning about the *whole claim*, not just pixel forensics.
+A seller-facing claim-integrity dashboard for Shopee-style refund claims, with
+physical-plausibility reasoning as its core differentiator. A seller logs in, sees buyer refund
+claims for the seller's products, and gets a **0–100 Risk Score** plus a band (Low / Elevated / High),
+per-signal evidence, and a plain-language explanation. It is advisory triage for the seller, not an
+auto-reject. Designed to counter the rising scam of AI-generated fake damage photos by reasoning
+about the *whole claim*, not just pixel forensics.
 
 ---
 
@@ -38,8 +39,9 @@ the AI-photo-fraud vector, as a transparent layer at the front of the existing p
 
 ## What We're Building / NOT Building
 
-**Building:** a claim-integrity agent that ingests a refund claim and produces a Risk Score + band +
-explanation. Three signals combine via a reliability-weighted score with hard-flag overrides.
+**Building:** a seller-login dashboard backed by a claim-integrity agent. The seller sees webhook-fed
+refund claims from buyers of their products and uses a Risk Score + band + explanation to verify each
+claim. Three signals combine via a reliability-weighted score with hard-flag overrides.
 
 **Core bet:** physical-plausibility reasoning. A VLM that understands real glass shatters violently
 but coherently, real metal dents and scuffs rather than fracturing radially, real cotton tears along
@@ -52,9 +54,9 @@ Remove the model and you have a form.
 - ❌ A bespoke AI-image detector (arms race; 10h can't train one).
 - ❌ EXIF / metadata / C2PA-provenance signal (stripped in the real world; no story value).
 - ❌ Auto-deny logic (false positives punish real customers; this is triage).
-- ❌ A real database, auth, or deployment infra (in-memory JSON, localhost demo).
-- ❌ A buyer/seller-facing UI (one reviewer-facing screen).
-- ❌ Real Shopee integration (standalone demo).
+- ❌ A real database, production auth, or deployment infra (in-memory JSON, localhost demo).
+- ❌ A buyer-facing UI or manual claim input form.
+- ❌ Real Shopee integration. The product story assumes Shopee webhook/database intake; demo JSON stands in for it.
 
 ---
 
@@ -123,14 +125,14 @@ score to at least 75 (into High).
 
 | Score | Band | Default action |
 |-------|------|----------------|
-| < 30  | **Low** | Release for standard processing (human spot-check) |
-| 30–65 | **Elevated** | Route to a human reviewer with the explanation card |
+| < 30  | **Low** | Release for standard processing (seller spot-check) |
+| 30–65 | **Elevated** | Route to seller review with the explanation card |
 | > 65  | **High** | Escalate / require additional evidence / fraud review |
 
 - **Whole numbers only** — no false precision; you have no labelled data.
 - **Label it "Risk Score," not "Fraud Probability."** It's a triage ordinal, not a calibrated probability.
 
-**Final call (OpenAI)** turns (score, band, signal evidences) into a 2–3 sentence reviewer explanation +
+**Final call (OpenAI)** turns (score, band, signal evidences) into a 2–3 sentence seller-facing explanation +
 recommended action. The math owns the number; the model owns the prose; it must only cite signals that
 actually fired and never invent facts.
 
@@ -140,8 +142,9 @@ actually fired and never invent facts.
 
 ```
 React + Vite + Tailwind  ->  Node + TS + Express  ->  OpenAI  (vision: Signal 1)
-(claim list, verdict card)   (signal runner,            OpenAI   (narrator) text
-                              aggregator, narrator)      call, same SDK
+(seller login, dashboard,   (demo login, signal        OpenAI   (narrator) text
+ verdict card)               runner, aggregator,        call, same SDK
+                              narrator)
                                                          in-memory JSON: data/*.json + pHash index
 ```
 
@@ -150,9 +153,10 @@ React + Vite + Tailwind  ->  Node + TS + Express  ->  OpenAI  (vision: Signal 1)
   Wrap the narrator with a templated fallback — it's the flakiest call and the score doesn't depend on it.
 
 - **Data:** `data/products.json`, `data/accounts.json`, `data/orders.json`, `data/claims.json`;
-  images in `data/images/claims/` and `data/images/reference/`. No DB.
-- **API contract (locked):** `POST /api/claim/:id/score` → full `ScoredClaim`; `GET /api/claims` →
-  summaries for the list. Strip `_dev` from every response.
+  images in `data/images/claims/` and `data/images/reference/`. No DB. These records represent
+  refund claims delivered by Shopee/platform data, not seller-entered form input.
+- **API contract (locked):** `POST /api/seller/login` → demo seller session; `POST /api/claim/:id/score`
+  → full `ScoredClaim`; `GET /api/claims` → summaries for the seller dashboard. Strip `_dev` from every response.
 - **Build tool:** Vite; OpenAI Codex for scaffolding and bulk implementation.
 
 ---
@@ -179,7 +183,7 @@ The full locked set is `data/CANONICAL_DATASET.md`.
 
 ## Demo Narrative (90 seconds)
 
-1. (10s) **Hook:** "AI is being used to attack the refund system — buyers submit AI-generated photos
+1. (10s) **Hook/login:** seller logs in and lands on the dashboard. "AI is being used to attack the refund system — buyers submit AI-generated photos
    of damage that doesn't exist. We use AI to defend it."
 2. (20s) **Clear fraud (C009):** the SSL 2 with cracks fanning across the metal faceplate. High band;
    the reasoning quotes the physics — metal dents and scuffs, it doesn't fracture radially.
@@ -190,7 +194,7 @@ The full locked set is `data/CANONICAL_DATASET.md`.
 5. (15s) **False-positive trap (C006):** that shattered glass is genuinely real — looks alarming, lands
    **Low**. "Calibrated, not trigger-happy."
 
-Takeaway slide: "What takes ~3 days to investigate, our agent triages in ~5 seconds — for a human to confirm."
+Takeaway slide: "What takes ~3 days to investigate, our agent triages in ~5 seconds — for the seller to verify."
 
 ---
 
@@ -201,17 +205,17 @@ Four people should buy **depth and polish, not more features.** Resist a fourth 
 | Person | Owns |
 |--------|------|
 | **A — Prompt / Integration** | Signal 1 prompt + schema + tuning (highest-value, least-delegable), then floating integrator once the prompt locks. |
-| **B — Backend** | Scaffold first (unblocks everyone), then Signals 2 & 3, aggregator, narrator, API. De-risked by the master prompt's staged build. |
-| **C — Frontend** | React claim list + verdict card + action buttons. Design taste. |
+| **B — Backend** | Scaffold first (unblocks everyone), then demo login, Signals 2 & 3, aggregator, narrator, API. De-risked by the master prompt's staged build. |
+| **C — Frontend** | Seller login, claim dashboard, verdict card, and action buttons. Design taste. |
 | **D — PM / Demo** | Images + data integration, demo order + narrative, pitch deck, cross-stream QA, demo delivery. A real job, not overhead. |
 
-Sequencing: B scaffolds hr 0–1; A tunes Signal 1 hr 1–4 on the 6 scenarios; C builds against the locked
+Sequencing: B scaffolds hr 0-1; A tunes Signal 1 hr 1-4 on the 9 scenarios; C builds against the locked
 API shape; D wires images/data and drives integration from hr 4. **Lock the API contract hour 1.**
 **No unverified Codex output to main.** **Rehearse on the demo machine.**
 
 **Cut list if behind at hr 6:** first the behavioural override (keep the simple heuristic), then mock
-the image-reuse hard flag for C003/C004. **Never cut:** Signal 1, the verdict card, the C005/C006
-false-positive trap, the rehearsal.
+the image-reuse hard flag for C003/C004. **Never cut:** Signal 1, the verdict card, the C006
+false-positive trap, the C009 hard-flag hero case, and the rehearsal.
 
 ---
 
@@ -223,7 +227,7 @@ false-positive trap, the rehearsal.
 - **Adversarial drift.** Frame as raising the cost of attack, not eliminating fraud.
 - **False positives have real cost** → human-in-the-loop, never auto-deny.
 - **Incumbent shadow.** Sea/Shopee likely has internal fraud ML. Our novelty is the physical-plausibility
-  *reasoning* + *explainability for reviewers* and the cross-platform reuse view — not "AI does fraud."
+  *reasoning* + *seller-facing explainability* and the cross-platform reuse view — not "AI does fraud."
 
 ---
 

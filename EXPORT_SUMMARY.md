@@ -5,8 +5,8 @@ A concise export of architecture, scope, and build sequence. Authoritative build
 
 ## Architecture
 
-- Frontend: React + Vite + Tailwind — reviewer UI (claim list, verdict card, action buttons).
-- Backend: Node + TypeScript + Express — signal runner, aggregator, final LLM narration.
+- Frontend: React + Vite + Tailwind — seller login + dashboard (claim list, verdict card, action buttons).
+- Backend: Node + TypeScript + Express — demo seller login, signal runner, aggregator, final LLM narration.
 - Models: OpenAI vision for `VisualClaimIntegrity`; OpenAI text for the narrator. One `openai` client,
   two model ids (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`) on `OPENAI_API_KEY`;
   read model names from env. Narrator has a templated fallback since the score doesn't depend on it.
@@ -21,11 +21,11 @@ See `AGENTS.md` and `claim-integrity-agent-spec.md`.
 
 ## Scope
 
-- In: 0–100 **Risk Score** + band (Low/Elevated/High) + per-signal evidence + short LLM explanation
-  for a human reviewer. Three signals only. Human-in-the-loop triage (no auto-deny). Runs on seeded
-  JSON + images.
-- Out: no DB/ORM, no auth, no EXIF/metadata/C2PA signal, no extra signals, no production deploy,
-  no buyer/seller UI, no real Shopee integration.
+- In: demo seller login, seller claim dashboard, 0–100 **Risk Score** + band (Low/Elevated/High) +
+  per-signal evidence + short LLM explanation for seller verification. Three signals only.
+  Human-in-the-loop triage (no auto-deny). Runs on seeded JSON + images as webhook-fed claim data.
+- Out: no DB/ORM, no production auth, no EXIF/metadata/C2PA signal, no extra signals,
+  no production deploy, no buyer UI, no manual claim input form, no real Shopee integration.
 
 ## Scoring & Aggregation
 
@@ -41,29 +41,32 @@ See `AGENTS.md` and `claim-integrity-agent-spec.md`.
 2. Aggregate available signals; apply hard flags.
 3. OpenAI narration (with fallback) → 2–3 sentence explanation + recommended action.
 
-## Demo scenarios (6)
+## Demo scenarios (9)
 
 | Claim | Product | Role | Expected |
 |-------|---------|------|----------|
-| C001 | SSL 2 (radial metal cracks) | clear fraud | High |
-| C002 | Oxford shirt (doctored from listing) | ambiguous, reference match | Elevated/High |
-| C003 + C004 | backpack (reused image) | image-reuse flag | High |
-| C005 | A4 photo frame (real shattered glass) | false-positive trap | **Low** |
-| C006 | Calcifer tray (real breakage) | legitimate | **Low** |
-
-> Note: no demo claim triggers the behavioural logistics override (all demo orders have one claim).
-> Decide before demo — add a logistics scenario, or present the override as a capability.
+| C001 | Oxford shirt | legitimate apparel damage | **Low** |
+| C002 | helmet visor | suspicious new-account claim | Elevated |
+| C003 + C004 | skincare set | reused image pair | High |
+| C005 | ceramic mug | text-image mismatch plus risky account | High |
+| C006 | glass photo frame | real shattered glass, logistics cluster | **Low** |
+| C007 | USB hub | real transit damage, logistics cluster | **Low** |
+| C008 | monitor | real transit damage, logistics cluster | **Low** |
+| C009 | SSL 2 audio interface | physical-implausibility hero case | High |
 
 ## API contract (locked)
 
-- `POST /api/claim/:id/score` → full `ScoredClaim`.
+- `POST /api/seller/login` → demo seller session.
 - `GET /api/claims` → claim summaries for the list view.
+- `POST /api/claim/:id/score` → full `ScoredClaim`.
+- `POST /api/claims/:id/score` → optional compatibility alias if already present.
 - Strip `_dev` from every response.
 
 ## Build sequence (staged; commit + review after each)
 
 0 scaffold · 1 types + data layer · 2 deterministic spine (Image Reuse + Behavioural + aggregator,
-`runEval --no-vision`) · 3 vision + narrator (full eval) · 4 API · 5 verdict-card UI · 6 polish + rehearse.
+`runEval --no-vision`) · 3 vision + narrator (full eval) · 4 API · 5 seller login + verdict-card UI ·
+6 polish + rehearse.
 
 ## Files of interest
 

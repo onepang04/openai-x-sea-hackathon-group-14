@@ -58,18 +58,22 @@ Hard-flag: `physical_plausibility == "implausible"` AND `confidence > 0.85` → 
 
 ## Tuning checklist — run against EVERY scenario before you call it done
 
-- [ ] **C001 — SSL 2 (AI-doctored, radial cracks across the metal faceplate)** → `implausible`,
+- [ ] **C001 — Oxford shirt (real seam tear)** → `plausible`, low risk. Key on seam/stitch stress and
+      pulled weave being ordinary cotton failure modes.
+- [ ] **C002 — helmet visor (suspicious account, plausible scratch)** → `plausible` or `uncertain`.
+      Signal 1 should not hard-flag this; behavioural context carries the Elevated result.
+- [ ] **C003 / C004 — skincare jar (same image reused by two accounts)** → likely `plausible` or
+      `uncertain`; the image-reuse hard flag decides, not Signal 1.
+- [ ] **C005 — ceramic mug (text-image mismatch)** → call out mismatch if the buyer claims bottom
+      damage but the image shows side cracks. It can be visually plausible ceramic damage while still
+      suspicious because text and image do not match.
+- [ ] **C006 — glass photo frame (real shattered glass)** → `plausible`, NOT flagged. Severity is not
+      suspicion; glass shatters violently and coherently.
+- [ ] **C007 — USB hub (real transit damage)** → `plausible` or `uncertain`, not a hard flag.
+- [ ] **C008 — monitor (real cracked LCD)** → `plausible` or `uncertain`, not a hard flag.
+- [ ] **C009 — SSL 2 (AI-doctored, radial cracks across the metal faceplate)** → `implausible`,
       confidence > 0.85. Key on the *metal fracturing radially*, not just "a knob broke." This must
       trip the hard flag.
-- [ ] **C002 — shirt (AI-doctored believable tear)** → `plausible` or borderline `uncertain`. Signal 1
-      alone should NOT convict it; the reference-image match is the decisive catch. If Signal 1 calls
-      this confidently implausible you've over-fit.
-- [ ] **C003 / C004 — backpack (reused image)** → likely `plausible`; the image-reuse hard flag decides,
-      not Signal 1.
-- [ ] **C005 — photo frame (REAL shattered glass)** → `plausible`, NOT flagged. The false-positive trap.
-      If it trips `implausible`, your prompt is over-eager on dramatic damage — strengthen the
-      "severity is not suspicion / glass shatters violently" guidance.
-- [ ] **C006 — Calcifer (REAL breakage)** → `plausible`, low risk.
 
-If C005 or C006 land anywhere but Low after aggregation, stop and fix the prompt before touching
-anything else — those two are the demo's credibility.
+If C001 or the logistics cluster (C006/C007/C008) land anywhere but Low after aggregation, stop and
+fix the prompt before touching anything else. Those cases are the demo's credibility.

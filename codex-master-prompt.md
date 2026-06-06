@@ -9,18 +9,21 @@
 
 ## Mission
 
-Build a **refund-claim integrity triage tool** for a marketplace (Shopee context). Given a refund
-claim — claim text, reason category, buyer-uploaded image(s), plus account/order/product context —
-it produces a **0–100 Risk Score**, a **band** (Low / Elevated / High), a per-signal breakdown, and a
-short plain-English explanation written for a **human reviewer**.
+Build a **seller-facing refund-claim integrity triage tool** for a marketplace (Shopee context).
+A seller logs in, sees refund claims submitted by buyers for the seller's products, and verifies each
+claim with triage support. Given a refund claim — claim text, reason category, buyer-uploaded image(s),
+plus account/order/product context — it produces a **0–100 Risk Score**, a **band** (Low / Elevated /
+High), a per-signal breakdown, and a short plain-English explanation written for the seller.
 
-It is a **triage aid, not a judge.** It never auto-approves or auto-rejects. A human makes the call.
+It is a **triage aid, not a judge.** It never auto-approves or auto-rejects. The seller makes the call.
 
 ### What this is NOT — do not build these
 - **Not an AI-image detector.** Do not import, train, or call any "is this image AI-generated" model.
   The visual signal reasons about *physical plausibility* (does this failure make sense for this
   material?), not image provenance. Detectors are an arms race we deliberately avoid.
-- No database, no auth, no login, no user management. **JSON files on disk are the only data store.**
+- No database, production auth, or user-management system. **JSON files on disk are the only data store.**
+- Demo seller login is in scope; keep it lightweight and local to the demo.
+- No manual claim input form. Claims are assumed to come from Shopee/platform data via webhook; local JSON stands in for webhook-fed records.
 - No payment, no real Shopee API. Everything runs against the local mock data.
 
 ---
@@ -36,17 +39,18 @@ A small monorepo:
 /data/images/claims/       # buyer-uploaded claim photos (present)
 /data/images/reference/    # pristine listing photos (present)
 /apps/api/                 # Node + TypeScript + Express backend  ← build this
-/apps/web/                 # React + Vite reviewer UI             ← build this
+/apps/web/                 # React + Vite seller login + dashboard ← build this
 ```
 
-Pipeline: **load a claim → enrich it (join account/order/product) → run 3 signals in parallel →
+Pipeline: **seller login → load seller-visible claims → enrich a claim (join account/order/product) → run 3 signals in parallel →
 aggregate into a Risk Score + band → narrate an explanation → return a `ScoredClaim`.**
 
 ---
 
-## Data contracts — build to these EXACT TypeScript types
+## Core scoring data contracts — build to these EXACT TypeScript types
 
-Put these in `apps/api/src/types.ts`. Everything else consumes them. Do not change the shapes.
+Put these in `apps/api/src/types.ts`. Everything else in the scoring pipeline consumes them. Do not
+change these shapes for login; add a small demo seller/session type separately if needed.
 
 ```ts
 export type ReasonCategory =
@@ -171,14 +175,14 @@ bands:  < 30 → Low,  30–65 → Elevated,  > 65 → High
 A missing signal drops out of **both** the numerator and denominator — it doesn't dilute the score
 toward zero. Confidence-weighting means an unsure signal contributes less.
 
-`recommendedAction` (advisory string only): Low → "Auto-approve eligible (human spot-check)";
-Elevated → "Route to manual review"; High → "Hold for investigation".
+`recommendedAction` (advisory string only): Low → "Release for standard processing";
+Elevated → "Request evidence"; High → "Escalate for investigation".
 
 ---
 
 ## The narrator — final call, on OpenAI
 After aggregation, one text-only call turns the `ScoredClaim` into a 2–4 sentence explanation for a
-reviewer. **Use OpenAI**: reuse the same `openai` SDK and `OPENAI_API_KEY`, with a text model id from
+seller. **Use OpenAI**: reuse the same `openai` SDK and `OPENAI_API_KEY`, with a text model id from
 `OPENAI_NARRATOR_MODEL` (may differ from the vision model — a cheaper text model is fine).
 It must **only** reference the signals that actually drove the score, name the band, and never invent
 facts not in the signal evidence. Write the result into `explanation`.
@@ -190,20 +194,25 @@ narrator hiccup must never break a claim — it just swaps the prose.
 
 ---
 
-## The reviewer UI (`apps/web`, React + Vite)
-One screen, built to be readable across a room during a live demo:
-- **Left:** list of all claims (id + product + a band-coloured dot). Click to select.
-- **Right — the verdict card** for the selected claim:
+## The seller dashboard UI (`apps/web`, React + Vite)
+Two states, built to be readable across a room during a live demo:
+- **Login:** a simple demo seller login. It can use a known demo credential or one-button demo access;
+  do not build production auth, password reset, registration, or role management.
+- **Dashboard left:** list of seller-visible claims (id + product + a band-coloured dot). Click to select.
+- **Dashboard right — the verdict card** for the selected claim:
   - Large **Risk Score** number + band, colour-coded (Low green / Elevated amber / High red).
   - The **claim image** and, if present, the product **reference image** side by side.
   - **Per-signal breakdown**: three rows, each showing signal name, its risk/confidence, and the
     one-line `evidence`. Make the hard-flag visually obvious when set.
   - The **narrator explanation** in plain prose.
-  - **Action buttons** (Approve / Escalate / Reject) — these are **UI-only and human-driven**; the
+  - **Action buttons** (Release / Request evidence / Escalate) — these are **UI-only and seller-driven**; the
     system never auto-acts. A click just logs the human decision locally.
 
 Clean, fast, uncluttered, high contrast. No component libraries needed beyond what Vite gives you;
 if you reach for one, keep it light.
+
+Do not add a claim creation/input form. The dashboard only displays claims already present from the
+webhook-fed dataset.
 
 ---
 
@@ -213,17 +222,20 @@ runs the full pipeline, and prints a table of **claimId · expected band (from `
 · actual band · PASS/FAIL**. Add a `--no-vision` flag that skips the OpenAI vision signal so you can
 test the deterministic spine without burning API calls. **Run this after every change.**
 
-The 6 demo claims and their expected outcomes:
+The 9 canonical demo claims and their expected outcomes:
 | Claim | Product | Expected band |
 |-------|---------|---------------|
-| C001 | SSL 2 interface (impossible metal cracks) | High |
-| C002 | Oxford shirt (doctored listing photo) | Elevated or High |
-| C003 / C004 | backpack (same image, two accounts) | High |
-| C005 | photo frame (real shattered glass) | **Low** |
-| C006 | Calcifer tray (real breakage) | **Low** |
+| C001 | Oxford shirt | **Low** |
+| C002 | helmet visor | Elevated |
+| C003 / C004 | skincare set, reused image | High |
+| C005 | ceramic mug, text-image mismatch | High |
+| C006 | glass photo frame, logistics cluster | **Low** |
+| C007 | USB hub, logistics cluster | **Low** |
+| C008 | monitor, logistics cluster | **Low** |
+| C009 | SSL 2 interface, impossible metal cracks | High |
 
-The two legit cases (C005, C006) landing **Low** is the make-or-break demo moment — treat any
-regression there as a build-breaker.
+The legitimate cases (C001, C006, C007, C008) landing **Low** is the make-or-break demo moment.
+Treat any regression there as a build-breaker.
 
 ---
 
@@ -250,26 +262,28 @@ token. STOP.
 call and the text narrator call), the Visual Claim Integrity signal
 (loading `signal-1-prompt.md`, strict-JSON parse with a safe fallback), and the narrator with its
 fallback. Wire
-both into the pipeline. Run the **full** eval and report expected vs actual for all 6 claims. STOP.
+both into the pipeline. Run the **full** eval and report expected vs actual for all 9 claims. STOP.
 
-**Stage 4 — API.** Express endpoints matching the **locked contract**: `POST /api/claim/:id/score`
-(runs the pipeline for that claim and returns the full `ScoredClaim`) plus `GET /api/claims` (claim
-summaries for the list view). Strip `_dev` from every response. STOP.
+**Stage 4 — API.** Express endpoints matching the **locked contract**: `POST /api/seller/login`
+(returns a demo seller session), `POST /api/claim/:id/score` (runs the pipeline for that claim and
+returns the full `ScoredClaim`), plus `GET /api/claims` (claim summaries for the seller dashboard).
+Strip `_dev` from every response. STOP.
 
-**Stage 5 — Reviewer UI.** Build the verdict card screen against the API. STOP.
+**Stage 5 — Seller UI.** Build the demo login plus verdict-card dashboard against the API. STOP.
 
-**Stage 6 — Polish + demo.** Tighten styling, make the hard-flag and the two legit "Low" cases read
+**Stage 6 — Polish + demo.** Tighten styling, make the hard-flag and legitimate "Low" cases read
 clearly, and confirm the eval is still green. STOP.
 
 ---
 
 ## Hard rules (do not violate, at any stage)
 1. **No AI-image-detection** of any kind. Physical-plausibility reasoning only.
-2. **No DB / auth / accounts.** JSON files only.
-3. **Never auto-decide a claim.** `ScoredClaim` and the UI buttons are advisory; a human acts.
+2. **No DB or production auth.** JSON files only; demo seller login is allowed.
+3. **Never auto-decide a claim.** `ScoredClaim` and the UI buttons are advisory; the seller acts.
 4. **Strip `_dev`** before any model call and before any API response.
 5. **Verify both model strings at runtime** — read the OpenAI vision and narrator model ids from env
    vars (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`, auth `OPENAI_API_KEY`); do not hardcode guesses.
 6. **Commit after every stage**; keep diffs small and reviewable.
 7. If a contract or behaviour is ambiguous, **stop and ask** — do not invent a new data shape.
-8. Build to the types above verbatim. If you think a type should change, raise it; don't silently edit.
+8. Build the core scoring types above verbatim. If you think a scoring type should change, raise it; don't silently edit.
+9. Do not build a manual claim input feature; claims are webhook-fed in the product story and seeded JSON in the demo.

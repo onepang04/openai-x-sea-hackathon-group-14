@@ -44,17 +44,20 @@ A005 risky (C005, C009) · A006 clean long-stander, logistics cluster (C006/C007
 - Ground truth lives ONLY in `_dev`. NEVER in a filename, an API response, or the UI.
 - Claim image filenames are neutral (content-describing — no "real"/"fake").
 - `_dev` is stripped before any model call and before any API response.
-- Don't renumber C001–C009, don't invent fields, no DB / auth / deploy infra.
+- Don't renumber C001-C009. No DB, production auth, deploy infra, or manual claim input form.
+- Demo seller login is allowed; seeded claims may all belong to the demo seller unless seller/product ownership is explicitly added.
 
 ## API contract (frontend + backend build to this)
+- `POST /api/seller/login` → demo seller session for the dashboard.
 - `GET /api/claims` → claim summaries (list view).
-- `POST /api/claims/:id/score` → full `ScoredClaim`.
+- `POST /api/claim/:id/score` → full `ScoredClaim`.
+- `POST /api/claims/:id/score` → optional compatibility alias if already present.
 - `ScoredClaim = { claimId, riskScore (0–100 whole number), band: "Low"|"Elevated"|"High", hardFlag: string|null, signals: SignalResult[], explanation, recommendedAction }`
 - `SignalResult = { name, risk (0–1), confidence (0–1), evidence, raw? }`
 - Label it **"Risk Score," never "Fraud Probability."**
 
 ## Per-stream notes
 - **Data (D):** make claims / products / accounts / orders + images match the table exactly; SSL 2 = P005 / claim C009; neutral filenames; update `IMAGES_MANIFEST.md`.
-- **Frontend (C):** claim IDs C001–C009; add an evidence asset + mock verdict for **C009**; render the `ScoredClaim` shape above.
-- **Backend (B):** the two endpoints above; strip `_dev`; the aggregator only consumes `SignalResult[]`.
+- **Frontend (C):** claim IDs C001-C009; login gate, seller dashboard, and the `ScoredClaim` shape above.
+- **Backend (B):** the endpoints above; strip `_dev`; the aggregator only consumes `SignalResult[]`.
 - **Prompt/eval (A):** **C009** = hard-flag anchor; **C001 + C006** = false-positive anchors.
