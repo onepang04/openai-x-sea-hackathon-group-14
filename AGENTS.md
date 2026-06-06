@@ -74,3 +74,8 @@ A final OpenAI text call turns (score, band, evidences) into the reviewer explan
 - The aggregator must not know what any signal *is* — it only consumes `SignalResult[]`.
 - Strip `_dev` annotations from claims before they reach the model; they are for testing/demo only, never sent as input.
 - Whole-number Risk Score in the UI. Label it "Risk Score," never "Fraud Probability."
+
+Branching workflow
+
+- Development follows `master` → `staging` → `feature` workflow. Create feature branches off `staging` and open PRs targeting `staging` for integration.
+- `staging` is intended for integration and demo-ready code; `master` remains the canonical release branch.
