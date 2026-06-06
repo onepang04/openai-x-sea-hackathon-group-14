@@ -1,620 +1,519 @@
-import type { ClaimVerdictView } from "../types";
+import type { ClaimVerdictView, RecommendedAction, RiskBand, SignalView } from "../types";
 
-const evidence = {
-  mugChip: "/evidence/claim-c001.svg",
-  phoneCrack: "/evidence/claim-c002.svg",
-  sharedEarbuds: "/evidence/claim-shared-01.svg",
-  shirtTear: "/evidence/claim-c005.svg",
-  glassShatter: "/evidence/claim-c006.svg",
-  glassDetail: "/evidence/claim-c006-detail.svg",
-  phoneLogistics: "/evidence/claim-c007.svg",
-  mugLogistics: "/evidence/claim-c008.svg",
-};
+const claimImage = (filename: string) => `/evidence/claims/${filename}`;
+const referenceImage = (filename: string) => `/evidence/reference/${filename}`;
+
+interface DemoClaimConfig {
+  id: string;
+  buyer: string;
+  product: string;
+  reason: string;
+  submittedAt: string;
+  claimValue: number;
+  riskScore: number;
+  weightedScore: number;
+  band: RiskBand;
+  flags: string[];
+  claimText: string;
+  productDetails: string;
+  evidenceImages: Array<{ id: string; url: string; alt: string }>;
+  hardFlags: string[];
+  explanation: string;
+  recommendedAction: RecommendedAction;
+  signals: SignalView[];
+}
 
 export const mockVerdicts: ClaimVerdictView[] = [
-  {
-    claim: {
-      id: "C002",
-      buyer: "Nora T.",
-      product: "Glass-screen phone",
-      reason: "Arrived with cracked screen",
-      submittedAt: "2026-06-06T09:11:00+08:00",
-      claimValue: 249,
-      riskScore: 91,
-      band: "High",
-      workflowState: "Unreviewed",
-      flags: ["Visual integrity"],
-      claimText: "The phone arrived cracked in the middle even though the outer box looked fine.",
-      productDetails: "Tempered glass display over aluminum frame. Typical failures start from impact points, corners, or edge compression.",
-      evidenceImages: [
-        {
-          id: "C002-main",
-          url: evidence.phoneCrack,
-          alt: "Phone screen evidence for claim C002",
-        },
-      ],
-    },
-    riskScore: 91,
-    weightedScore: 82,
-    band: "High",
-    hardFlags: ["VisualClaimIntegrity: high-confidence physical implausibility"],
-    explanation:
-      "The image shows a uniform central crack pattern without a credible impact origin, which conflicts with expected tempered-glass failure. The reviewer should escalate and request additional angles before any refund decision.",
-    recommendedAction: "Escalate",
-    signals: [
+  createVerdict({
+    id: "C001",
+    buyer: "jielin_home",
+    product: "Ralph Lauren Custom Fit Oxford Shirt",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-01T09:10:00+08:00",
+    claimValue: 189,
+    riskScore: 18,
+    weightedScore: 18,
+    band: "Low",
+    flags: [],
+    claimText: "Item sleeve came in with a huge rip along the seam at the wrist section.",
+    productDetails:
+      "Fashion. 100% cotton oxford cloth with stitched cuffs and seams. Typical failures include tears along stitched seams, fraying at cuffs, and pulled weave around stress points.",
+    evidenceImages: [
       {
-        name: "VisualClaimIntegrity",
-        risk: 0.91,
-        confidence: 0.92,
-        confidenceLabel: "High confidence",
-        evidence: "Cracks radiate evenly from the display center with no visible impact origin or edge stress point.",
-        hardFlagTrigger: "physical_plausibility=implausible and confidence>0.85",
-        details: {
-          physicalPlausibility: "implausible",
-          plausibilityReasoning:
-            "Tempered glass cracks usually propagate from a point of force. This pattern is too uniform and disconnected from a credible impact source.",
-          contradictions: [
-            "Radial fracture is centered in an undamaged field.",
-            "Outer frame and corners show no corresponding compression or impact mark.",
-          ],
-          alternativeExplanations: [
-            "A direct point load could produce radial cracking, but the photo does not show a matching origin.",
-          ],
-          textImageMatch: true,
-          mismatches: [],
-        },
-      },
-      {
-        name: "ImageReuse",
-        risk: 0,
-        confidence: 1,
-        confidenceLabel: "High confidence",
-        evidence: "No near-duplicate claim image found in the seeded pHash index.",
-        details: {
-          matchFound: false,
-          pHashDistance: 19,
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.38,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Newer account with one recent claim and a mid-value order.",
-        details: {
-          triggeredRules: ["account_age_days<30 and claim_value>=50"],
-          accountAgeDays: 18,
-          claimsLast30Days: 1,
-          refundRate: "0.25",
-        },
+        id: "C001-main",
+        url: claimImage("shirt_seam_tear.jpg"),
+        alt: "Oxford shirt sleeve seam tear evidence for claim C001",
       },
     ],
-  },
-  {
-    claim: {
-      id: "C003",
-      buyer: "Irfan K.",
-      product: "Wireless earbuds case",
-      reason: "Case arrived cracked",
-      submittedAt: "2026-06-06T09:26:00+08:00",
-      claimValue: 82,
-      riskScore: 88,
-      band: "High",
-      workflowState: "Unreviewed",
-      flags: ["Image reuse"],
-      claimText: "The charging case has a crack across the lid and will not close properly.",
-      productDetails: "Gloss plastic charging case. Normal failures are hinge stress, corner crushing, or surface scuffs.",
-      evidenceImages: [
-        {
-          id: "C003-main",
-          url: evidence.sharedEarbuds,
-          alt: "Earbuds case evidence for claim C003",
-        },
-      ],
-    },
+    hardFlags: [],
+    explanation:
+      "The sleeve tear follows a plausible cotton seam failure pattern and the buyer account is established. Release for standard processing is appropriate.",
+    recommendedAction: "Release",
+    signals: [
+      visualSignal(0.1, 0.86, "plausible", "The tear follows the stitched wrist seam with pulled fabric around the edge.", {
+        alternatives: ["A weak stitch line or parcel snag could produce this damage."],
+      }),
+      imageReuseSignal(0, 0.96, "No near-duplicate image found in the demo evidence set.", 23),
+      behaviouralSignal(0.14, "Established buyer with low refund activity.", {
+        accountAgeDays: 365,
+        claimsLast30Days: 1,
+        refundRate: "0.07",
+        triggeredRules: [],
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C002",
+    buyer: "newuser_4471",
+    product: "Tinted Motorcycle Helmet Visor",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-02T10:25:00+08:00",
+    claimValue: 65,
+    riskScore: 47,
+    weightedScore: 47,
+    band: "Elevated",
+    flags: ["New account"],
+    claimText: "The visor arrived with a scratch on the lens that blocks vision.",
+    productDetails:
+      "Automotive Accessories. Tinted polycarbonate lens with anti-scratch coating. Typical failures include surface scratches, edge chips, and cracks from mounting stress.",
+    evidenceImages: [
+      {
+        id: "C002-main",
+        url: claimImage("visor_scratched.jpg"),
+        alt: "Tinted helmet visor scratch evidence for claim C002",
+      },
+    ],
+    hardFlags: [],
+    explanation:
+      "The scratch itself is plausible for a visor, but the account is new with early refund activity. Request additional evidence before release.",
+    recommendedAction: "Request evidence",
+    signals: [
+      visualSignal(0.28, 0.62, "plausible", "A surface scratch can occur on coated polycarbonate during handling or transit.", {
+        alternatives: ["Packaging abrasion or contact with a hard edge could explain the scratch."],
+      }),
+      imageReuseSignal(0, 0.94, "No near-duplicate image found in the demo evidence set.", 20),
+      behaviouralSignal(0.68, "New account with multiple early claims raises risk.", {
+        accountAgeDays: 12,
+        claimsLast30Days: 2,
+        refundRate: "0.67",
+        triggeredRules: ["refund_rate>0.5", "account_age_days<30 and product.price_sgd>=50"],
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C003",
+    buyer: "quickflip_store",
+    product: "Torriden Dive-In Skincare Set",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-05-28T15:20:00+08:00",
+    claimValue: 58,
     riskScore: 88,
-    weightedScore: 54,
-    band: "High",
-    hardFlags: ["ImageReuse: near-duplicate evidence image"],
-    explanation:
-      "The evidence image closely matches a prior claim image in the internal pHash index. Because image reuse is a hard flag, this claim should be escalated even though the visual damage itself is not impossible.",
-    recommendedAction: "Escalate",
-    signals: [
-      {
-        name: "VisualClaimIntegrity",
-        risk: 0.42,
-        confidence: 0.58,
-        confidenceLabel: "Medium confidence",
-        evidence: "Visible case damage is plausible for plastic, but the photo quality leaves some uncertainty.",
-        details: {
-          physicalPlausibility: "uncertain",
-          plausibilityReasoning:
-            "A cracked plastic hinge or lid can happen in transit, but the visible fracture lacks enough context to assess force direction.",
-          contradictions: [],
-          alternativeExplanations: ["A crushed parcel or hinge stress could explain the visible crack."],
-          textImageMatch: true,
-          mismatches: [],
-        },
-      },
-      {
-        name: "ImageReuse",
-        risk: 0.95,
-        confidence: 0.95,
-        confidenceLabel: "High confidence",
-        evidence: "Near-duplicate evidence image found against claim C004 with pHash distance 2.",
-        hardFlagTrigger: "pHash distance < 5",
-        details: {
-          matchFound: true,
-          matchingClaimId: "C004",
-          pHashDistance: 2,
-          matchedPriorEvidence: {
-            id: "C004-match",
-            url: evidence.sharedEarbuds,
-            alt: "Matched prior evidence for claim C004",
-          },
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.31,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Moderate refund history but no logistics cluster found.",
-        details: {
-          triggeredRules: ["claims_last_30_days>=3"],
-          accountAgeDays: 141,
-          claimsLast30Days: 3,
-          refundRate: "0.33",
-        },
-      },
-    ],
-  },
-  {
-    claim: {
-      id: "C004",
-      buyer: "Maya L.",
-      product: "Wireless earbuds case",
-      reason: "Case cracked on delivery",
-      submittedAt: "2026-06-06T09:29:00+08:00",
-      claimValue: 78,
-      riskScore: 87,
-      band: "High",
-      workflowState: "Unreviewed",
-      flags: ["Image reuse"],
-      claimText: "The plastic case arrived with the lid cracked and the hinge loose.",
-      productDetails: "Gloss plastic charging case. Normal failures are hinge stress, corner crushing, or surface scuffs.",
-      evidenceImages: [
-        {
-          id: "C004-main",
-          url: evidence.sharedEarbuds,
-          alt: "Earbuds case evidence for claim C004",
-        },
-      ],
-    },
-    riskScore: 87,
     weightedScore: 56,
     band: "High",
-    hardFlags: ["ImageReuse: near-duplicate evidence image"],
+    flags: ["Image reuse"],
+    claimText: "The black moisturiser jar arrived cracked even though I ordered it new.",
+    productDetails:
+      "Beauty. Plastic cosmetic jars with sealed lids and cardboard retail packaging. Typical failures include cracked plastic jars, leakage, and crushed retail packaging.",
+    evidenceImages: [
+      {
+        id: "C003-main",
+        url: claimImage("skincare_jar_cracked.jpg"),
+        alt: "Skincare jar crack evidence for claim C003",
+      },
+    ],
+    hardFlags: ["ImageReuse: near-duplicate evidence image with claim C004"],
     explanation:
-      "The same evidence image appears in another claim with a very low pHash distance. Escalation is recommended so the reviewer can compare claim history before acting.",
+      "The same skincare evidence image is used by another buyer account. Escalate this claim because the reuse hard flag outweighs the otherwise plausible plastic damage.",
     recommendedAction: "Escalate",
     signals: [
-      {
-        name: "VisualClaimIntegrity",
-        risk: 0.4,
-        confidence: 0.6,
-        confidenceLabel: "Medium confidence",
-        evidence: "Plastic case damage is possible, but the image alone is not decisive.",
-        details: {
-          physicalPlausibility: "uncertain",
-          plausibilityReasoning:
-            "The visible crack could follow plastic hinge stress, though the scene does not reveal package compression or impact context.",
-          contradictions: [],
-          alternativeExplanations: ["A hinge defect or parcel compression could explain the crack."],
-          textImageMatch: true,
-          mismatches: [],
+      visualSignal(0.38, 0.58, "uncertain", "Cracked plastic packaging is plausible, but the image alone is not decisive.", {
+        alternatives: ["Parcel compression could crack a plastic jar or lid."],
+      }),
+      imageReuseSignal(0.95, 0.96, "Near-duplicate evidence image found against claim C004 with pHash distance 0.", 0, {
+        matchingClaimId: "C004",
+        hardFlagTrigger: "pHash distance <= 5",
+        matchedPriorEvidence: {
+          id: "C004-match",
+          url: claimImage("skincare_jar_cracked.jpg"),
+          alt: "Matched skincare evidence for claim C004",
         },
-      },
-      {
-        name: "ImageReuse",
-        risk: 0.95,
-        confidence: 0.95,
-        confidenceLabel: "High confidence",
-        evidence: "Near-duplicate evidence image found against claim C003 with pHash distance 2.",
-        hardFlagTrigger: "pHash distance < 5",
-        details: {
-          matchFound: true,
-          matchingClaimId: "C003",
-          pHashDistance: 2,
-          matchedPriorEvidence: {
-            id: "C003-match",
-            url: evidence.sharedEarbuds,
-            alt: "Matched prior evidence for claim C003",
-          },
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.25,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Limited account signal; no logistics override applies.",
-        details: {
-          triggeredRules: ["claims_last_30_days>=3"],
-          accountAgeDays: 98,
-          claimsLast30Days: 3,
-          refundRate: "0.29",
-        },
-      },
+      }),
+      behaviouralSignal(0.7, "High refund rate and recent claim velocity were triggered.", {
+        accountAgeDays: 47,
+        claimsLast30Days: 3,
+        refundRate: "0.67",
+        triggeredRules: ["refund_rate>0.5", "claims_last_30_days>=3"],
+      }),
     ],
-  },
-  {
-    claim: {
-      id: "C005",
-      buyer: "Samuel P.",
-      product: "Cotton t-shirt",
-      reason: "Torn seam after delivery",
-      submittedAt: "2026-06-06T09:45:00+08:00",
-      claimValue: 36,
-      riskScore: 74,
-      band: "High",
-      workflowState: "Unreviewed",
-      flags: ["Serial return pattern"],
-      claimText: "There is a tear near the side seam. I noticed it as soon as I opened the parcel.",
-      productDetails: "Cotton jersey with stitched seams. Typical failures include seam separation, fraying, snags, or stress tearing along stitch lines.",
-      evidenceImages: [
-        {
-          id: "C005-main",
-          url: evidence.shirtTear,
-          alt: "T-shirt seam evidence for claim C005",
-        },
-      ],
-    },
-    riskScore: 74,
-    weightedScore: 74,
+  }),
+  createVerdict({
+    id: "C004",
+    buyer: "deals_hunter88",
+    product: "Torriden Dive-In Skincare Set",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-05-29T12:35:00+08:00",
+    claimValue: 58,
+    riskScore: 87,
+    weightedScore: 55,
     band: "High",
-    hardFlags: [],
-    explanation:
-      "The shirt damage is not visually conclusive on its own, but the account pattern increases the overall Risk Score. Requesting additional evidence is a proportionate next step before escalation.",
-    recommendedAction: "Request evidence",
-    signals: [
+    flags: ["Image reuse"],
+    claimText: "The moisturiser came cracked on arrival and I need a refund.",
+    productDetails:
+      "Beauty. Plastic cosmetic jars with sealed lids and cardboard retail packaging. Typical failures include cracked plastic jars, leakage, and crushed retail packaging.",
+    evidenceImages: [
       {
-        name: "VisualClaimIntegrity",
-        risk: 0.5,
-        confidence: 0.48,
-        confidenceLabel: "Low confidence",
-        evidence: "The seam tear is plausible but borderline; the image does not provide enough context to rule either way.",
-        details: {
-          physicalPlausibility: "uncertain",
-          plausibilityReasoning:
-            "Cotton can fail along seams, but the tear edge appears unusually clean compared with expected fraying.",
-          contradictions: ["Tear edge is very straight for a pulled cotton seam."],
-          alternativeExplanations: [
-            "A manufacturing stitch defect or packing snag could create a clean seam separation.",
-          ],
-          textImageMatch: true,
-          mismatches: [],
-        },
-      },
-      {
-        name: "ImageReuse",
-        risk: 0,
-        confidence: 1,
-        confidenceLabel: "High confidence",
-        evidence: "No near-duplicate image found.",
-        details: {
-          matchFound: false,
-          pHashDistance: 21,
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.88,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "High refund rate and multiple recent claims were triggered for this account.",
-        details: {
-          triggeredRules: ["refund_rate>0.5", "claims_last_30_days>=3"],
-          accountAgeDays: 74,
-          claimsLast30Days: 5,
-          refundRate: "0.63",
-        },
+        id: "C004-main",
+        url: claimImage("skincare_jar_cracked.jpg"),
+        alt: "Skincare jar crack evidence for claim C004",
       },
     ],
-  },
-  {
-    claim: {
-      id: "C006",
-      buyer: "Alicia R.",
-      product: "Glass bottle",
-      reason: "Bottle shattered in parcel",
-      submittedAt: "2026-06-06T10:02:00+08:00",
-      claimValue: 24,
-      riskScore: 41,
-      band: "Elevated",
-      workflowState: "Unreviewed",
-      flags: [],
-      claimText: "The bottle broke badly during delivery. There was glass inside the wrapping.",
-      productDetails: "Thin glass bottle. Typical failures include irregular shattering, impact-origin cracks, and scattered fragments.",
-      evidenceImages: [
-        {
-          id: "C006-main",
-          url: evidence.glassShatter,
-          alt: "Glass bottle evidence for claim C006",
-        },
-        {
-          id: "C006-detail",
-          url: evidence.glassDetail,
-          alt: "Second glass bottle evidence angle for claim C006",
-        },
-      ],
-    },
-    riskScore: 41,
-    weightedScore: 41,
-    band: "Elevated",
-    hardFlags: [],
+    hardFlags: ["ImageReuse: near-duplicate evidence image with claim C003"],
     explanation:
-      "The damage looks dramatic but remains physically plausible for thin glass. Because the visual signal is not a hard flag, the reviewer should request context only if the claim history warrants it.",
-    recommendedAction: "Request evidence",
+      "This claim reuses the same skincare photo as C003 from a different account. Escalation is recommended for seller review.",
+    recommendedAction: "Escalate",
     signals: [
-      {
-        name: "VisualClaimIntegrity",
-        risk: 0.18,
-        confidence: 0.82,
-        confidenceLabel: "High confidence",
-        evidence: "Irregular fragments and edge cracking are consistent with brittle glass failure.",
-        details: {
-          physicalPlausibility: "plausible",
-          plausibilityReasoning:
-            "Thin glass can shatter into uneven pieces after parcel impact, and the visible damage follows that pattern.",
-          contradictions: [],
-          alternativeExplanations: ["Parcel compression or a drop could produce this shatter pattern."],
-          textImageMatch: true,
-          mismatches: [],
+      visualSignal(0.36, 0.6, "uncertain", "The jar crack is possible for compressed plastic packaging.", {
+        alternatives: ["A crushed parcel could explain the visible crack."],
+      }),
+      imageReuseSignal(0.95, 0.96, "Near-duplicate evidence image found against claim C003 with pHash distance 0.", 0, {
+        matchingClaimId: "C003",
+        hardFlagTrigger: "pHash distance <= 5",
+        matchedPriorEvidence: {
+          id: "C003-match",
+          url: claimImage("skincare_jar_cracked.jpg"),
+          alt: "Matched skincare evidence for claim C003",
         },
-      },
+      }),
+      behaviouralSignal(0.78, "Serial refund behaviour and recent claim velocity were triggered.", {
+        accountAgeDays: 182,
+        claimsLast30Days: 4,
+        refundRate: "0.60",
+        triggeredRules: ["refund_rate>0.5", "claims_last_30_days>=3"],
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C005",
+    buyer: "flashbuyer_221",
+    product: "Custom Ceramic Photo Mug",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-03T16:45:00+08:00",
+    claimValue: 16,
+    riskScore: 76,
+    weightedScore: 76,
+    band: "High",
+    flags: ["Text-image mismatch", "Risky account"],
+    claimText: "The mug has huge cracks at the bottom part and arrived in poor condition.",
+    productDetails:
+      "Home & Living. Glazed ceramic mug with printed polymer transfer. Typical failures include rim chips, impact cracks, thermal cracks, and handle fractures.",
+    evidenceImages: [
       {
-        name: "ImageReuse",
-        risk: 0,
-        confidence: 1,
-        confidenceLabel: "High confidence",
-        evidence: "No near-duplicate claim image found.",
-        details: {
-          matchFound: false,
-          pHashDistance: 18,
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.61,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Recent claims increase risk, but no hard flag is present.",
-        details: {
-          triggeredRules: ["claims_last_30_days>=3"],
-          accountAgeDays: 126,
-          claimsLast30Days: 3,
-          refundRate: "0.42",
-        },
+        id: "C005-main",
+        url: claimImage("mug_cracked.jpg"),
+        alt: "Ceramic mug crack evidence for claim C005",
       },
     ],
-  },
-  {
-    claim: {
-      id: "C001",
-      buyer: "Denise G.",
-      product: "Ceramic mug",
-      reason: "Small chip on rim",
-      submittedAt: "2026-06-06T08:58:00+08:00",
-      claimValue: 18,
-      riskScore: 17,
-      band: "Low",
-      workflowState: "Unreviewed",
-      flags: [],
-      claimText: "The mug has a small chip on the rim. The rest of the mug looks fine.",
-      productDetails: "Glazed ceramic mug. Typical failures include rim chips, edge impact cracks, and handle fractures.",
-      evidenceImages: [
-        {
-          id: "C001-main",
-          url: evidence.mugChip,
-          alt: "Ceramic mug evidence for claim C001",
-        },
-      ],
-    },
-    riskScore: 17,
-    weightedScore: 17,
+    hardFlags: [],
+    explanation:
+      "Ceramic cracking is physically possible, but the image does not support the buyer's bottom-damage description and the account has high recent refund velocity. Escalate for seller review.",
+    recommendedAction: "Escalate",
+    signals: [
+      visualSignal(0.76, 0.78, "uncertain", "The visible side cracking does not match the claim text describing bottom damage.", {
+        mismatches: ["Buyer says bottom damage, while the evidence image shows visible side cracks."],
+        textImageMatch: false,
+      }),
+      imageReuseSignal(0.04, 0.94, "No near-duplicate image found in the demo evidence set.", 19),
+      behaviouralSignal(0.86, "High refund rate and recent claim velocity were triggered.", {
+        accountAgeDays: 22,
+        claimsLast30Days: 3,
+        refundRate: "0.60",
+        triggeredRules: ["refund_rate>0.5", "claims_last_30_days>=3"],
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C006",
+    buyer: "ahmad_collects",
+    product: "A4 Glass Photo Frame",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-04T11:05:00+08:00",
+    claimValue: 18,
+    riskScore: 14,
+    weightedScore: 14,
     band: "Low",
+    flags: ["Logistics incident"],
+    claimText: "Received my glass photo frame completely shattered, with large cracks and loose fragments inside the packaging.",
+    productDetails:
+      "Home & Living. Glass pane in a synthetic leather frame. Typical failures include radiating glass cracks, loose fragments, and chipped frame corners.",
+    evidenceImages: [
+      {
+        id: "C006-main",
+        url: claimImage("glass_frame_shattered.jpg"),
+        alt: "Shattered glass photo frame evidence for claim C006",
+      },
+    ],
     hardFlags: [],
     explanation:
-      "The visible rim chip is consistent with ordinary ceramic impact damage and the buyer text matches the image. Release for standard processing is appropriate.",
+      "The dramatic shatter pattern is plausible for glass, and C006-C008 share one order as a logistics cluster. Release for standard processing.",
     recommendedAction: "Release",
     signals: [
+      visualSignal(0.1, 0.88, "plausible", "Irregular cracks and loose fragments are consistent with brittle glass failure.", {
+        alternatives: ["Parcel impact or compression could produce this shatter pattern."],
+      }),
+      imageReuseSignal(0, 0.96, "No near-duplicate image found in the demo evidence set.", 22),
+      behaviouralSignal(0.12, "Shared order detected; logistics-incident override lowered behavioural risk.", {
+        accountAgeDays: 600,
+        claimsLast30Days: 3,
+        refundRate: "0.08",
+        triggeredRules: ["claims_last_30_days>=3", "order.total_claims_against_order>=3"],
+        override: "C006, C007, and C008 share ORD-1006, suggesting parcel-level transit damage.",
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C007",
+    buyer: "ahmad_collects",
+    product: "Vention 4-Port USB Hub",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-04T11:08:00+08:00",
+    claimValue: 25,
+    riskScore: 18,
+    weightedScore: 18,
+    band: "Low",
+    flags: ["Logistics incident"],
+    claimText: "The USB hub connector broke before any use and the product arrived unusable.",
+    productDetails:
+      "Electronics. Plastic and aluminium hub casing with USB-A ports and rubberized cable. Typical failures include detached USB connector shells and cable strain damage.",
+    evidenceImages: [
       {
-        name: "VisualClaimIntegrity",
-        risk: 0.1,
-        confidence: 0.88,
-        confidenceLabel: "High confidence",
-        evidence: "Small rim chip is physically plausible for glazed ceramic.",
-        details: {
-          physicalPlausibility: "plausible",
-          plausibilityReasoning:
-            "Ceramic often chips at exposed edges after a knock; the rest of the mug can remain intact.",
-          contradictions: [],
-          alternativeExplanations: ["Parcel handling or contact with another item could cause a small rim chip."],
-          textImageMatch: true,
-          mismatches: [],
-        },
-      },
-      {
-        name: "ImageReuse",
-        risk: 0,
-        confidence: 1,
-        confidenceLabel: "High confidence",
-        evidence: "No near-duplicate claim image found.",
-        details: {
-          matchFound: false,
-          pHashDistance: 26,
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.18,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Established account with low refund activity.",
-        details: {
-          triggeredRules: [],
-          accountAgeDays: 412,
-          claimsLast30Days: 0,
-          refundRate: "0.04",
-        },
+        id: "C007-main",
+        url: claimImage("usb_hub_broken.jpg"),
+        alt: "USB hub connector damage evidence for claim C007",
       },
     ],
-  },
-  {
-    claim: {
-      id: "C007",
-      buyer: "Logistics batch A",
-      product: "Glass-screen phone",
-      reason: "Transit damage",
-      submittedAt: "2026-06-06T10:13:00+08:00",
-      claimValue: 231,
-      riskScore: 22,
-      band: "Low",
-      workflowState: "Unreviewed",
-      flags: ["Logistics incident"],
-      claimText: "The phone screen was damaged in the shared delivery batch.",
-      productDetails: "Tempered glass display over aluminum frame. Typical failures start from corners, edges, or impact points.",
-      evidenceImages: [
-        {
-          id: "C007-main",
-          url: evidence.phoneLogistics,
-          alt: "Phone transit damage evidence for claim C007",
-        },
-      ],
-    },
-    riskScore: 22,
-    weightedScore: 39,
-    band: "Low",
     hardFlags: [],
     explanation:
-      "The visual damage is plausible and several claims share the same order and delivery context. The behavioural override lowers risk and points toward a logistics incident rather than an account-level escalation.",
+      "The connector damage is plausible transit damage and belongs to the same shared-order logistics incident as C006 and C008. Release for standard processing.",
     recommendedAction: "Release",
     signals: [
+      visualSignal(0.16, 0.74, "plausible", "Connector detachment is a normal failure mode for cable strain or parcel compression.", {
+        alternatives: ["Cable strain during shipping could detach the connector shell."],
+      }),
+      imageReuseSignal(0, 0.96, "No near-duplicate image found in the demo evidence set.", 24),
+      behaviouralSignal(0.14, "Shared order detected; logistics-incident override lowered behavioural risk.", {
+        accountAgeDays: 600,
+        claimsLast30Days: 3,
+        refundRate: "0.08",
+        triggeredRules: ["claims_last_30_days>=3", "order.total_claims_against_order>=3"],
+        override: "C006, C007, and C008 share ORD-1006, suggesting parcel-level transit damage.",
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C008",
+    buyer: "ahmad_collects",
+    product: "Acer KA2 27-inch IPS Monitor",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-04T11:11:00+08:00",
+    claimValue: 189,
+    riskScore: 21,
+    weightedScore: 21,
+    band: "Low",
+    flags: ["Logistics incident"],
+    claimText: "The Acer monitor screen was already cracked when opened, with display damage straight out of the box.",
+    productDetails:
+      "Electronics. LCD glass panel with plastic housing and metal stand. Typical failures include LCD panel cracks, pressure damage, and housing fractures during transit.",
+    evidenceImages: [
       {
-        name: "VisualClaimIntegrity",
-        risk: 0.16,
-        confidence: 0.8,
-        confidenceLabel: "High confidence",
-        evidence: "Crack direction is consistent with edge compression during transit.",
-        details: {
-          physicalPlausibility: "plausible",
-          plausibilityReasoning:
-            "The crack starts near the edge, which fits compression or corner impact during shipping.",
-          contradictions: [],
-          alternativeExplanations: ["Shared parcel compression could account for the visible damage."],
-          textImageMatch: true,
-          mismatches: [],
-        },
-      },
-      {
-        name: "ImageReuse",
-        risk: 0,
-        confidence: 1,
-        confidenceLabel: "High confidence",
-        evidence: "No near-duplicate claim image found.",
-        details: {
-          matchFound: false,
-          pHashDistance: 17,
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.15,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Shared order ID and delivery date detected; logistics-incident override lowered the risk.",
-        details: {
-          triggeredRules: ["claims_sharing_order_id"],
-          override: "8 claims share ORD-9981 and the same delivery date; likely logistics incident.",
-          orderId: "ORD-9981",
-          relatedClaims: ["C007", "C008"],
-          adjustedFromRisk: 0.58,
-        },
+        id: "C008-main",
+        url: claimImage("monitor_cracked.jpg"),
+        alt: "Cracked Acer monitor evidence for claim C008",
       },
     ],
-  },
-  {
-    claim: {
-      id: "C008",
-      buyer: "Logistics batch B",
-      product: "Ceramic mug",
-      reason: "Transit damage",
-      submittedAt: "2026-06-06T10:16:00+08:00",
-      claimValue: 20,
-      riskScore: 19,
-      band: "Low",
-      workflowState: "Unreviewed",
-      flags: ["Logistics incident"],
-      claimText: "The mug was cracked in the same delivery batch as other damaged items.",
-      productDetails: "Glazed ceramic mug. Typical failures include rim chips, impact cracks, and handle fractures.",
-      evidenceImages: [
-        {
-          id: "C008-main",
-          url: evidence.mugLogistics,
-          alt: "Mug transit damage evidence for claim C008",
-        },
-      ],
-    },
-    riskScore: 19,
-    weightedScore: 35,
-    band: "Low",
     hardFlags: [],
     explanation:
-      "The mug damage is physically plausible and connected to the same delivery incident as another claim. Release for logistics handling is more appropriate than fraud escalation.",
+      "The cracked LCD is plausible transit damage, and the shared order context points to a logistics incident instead of buyer-level escalation.",
     recommendedAction: "Release",
     signals: [
+      visualSignal(0.22, 0.7, "plausible", "LCD panel cracks and display artifacts can result from transit impact or torsion.", {
+        alternatives: ["Pressure during shipping could crack the LCD panel."],
+      }),
+      imageReuseSignal(0, 0.95, "No near-duplicate image found in the demo evidence set.", 26),
+      behaviouralSignal(0.16, "Shared order detected; logistics-incident override lowered behavioural risk.", {
+        accountAgeDays: 600,
+        claimsLast30Days: 3,
+        refundRate: "0.08",
+        triggeredRules: ["claims_last_30_days>=3", "order.total_claims_against_order>=3"],
+        override: "C006, C007, and C008 share ORD-1006, suggesting parcel-level transit damage.",
+      }),
+    ],
+  }),
+  createVerdict({
+    id: "C009",
+    buyer: "flashbuyer_221",
+    product: "Solid State Logic SSL 2 USB Audio Interface",
+    reason: "Damaged or faulty",
+    submittedAt: "2026-06-05T13:40:00+08:00",
+    claimValue: 399,
+    riskScore: 92,
+    weightedScore: 83,
+    band: "High",
+    flags: ["Physical implausibility", "Reference match"],
+    claimText: "The audio interface arrived with the monitor knob snapped off and cracks spreading across the top panel.",
+    productDetails:
+      "Audio. Aluminium chassis with plastic control knobs. Typical failures include cracked knobs, scuffs or dents on the metal faceplate, and bent rear I/O connectors.",
+    evidenceImages: [
       {
-        name: "VisualClaimIntegrity",
-        risk: 0.14,
-        confidence: 0.82,
-        confidenceLabel: "High confidence",
-        evidence: "Rim and side cracking are consistent with ceramic impact damage.",
-        details: {
-          physicalPlausibility: "plausible",
-          plausibilityReasoning:
-            "Ceramic can crack from a localized parcel impact while leaving nearby glaze mostly intact.",
-          contradictions: [],
-          alternativeExplanations: ["Parcel drop or compression could explain the crack."],
-          textImageMatch: true,
-          mismatches: [],
-        },
+        id: "C009-main",
+        url: claimImage("ssl2_broken.jpg"),
+        alt: "Broken SSL 2 audio interface evidence for claim C009",
       },
       {
-        name: "ImageReuse",
-        risk: 0,
-        confidence: 1,
-        confidenceLabel: "High confidence",
-        evidence: "No near-duplicate claim image found.",
-        details: {
-          matchFound: false,
-          pHashDistance: 24,
-        },
-      },
-      {
-        name: "BehaviouralContext",
-        risk: 0.12,
-        confidence: 0.7,
-        confidenceLabel: "Medium confidence",
-        evidence: "Shared order ID and delivery date detected; logistics-incident override lowered the risk.",
-        details: {
-          triggeredRules: ["claims_sharing_order_id"],
-          override: "8 claims share ORD-9981 and the same delivery date; likely logistics incident.",
-          orderId: "ORD-9981",
-          relatedClaims: ["C007", "C008"],
-          adjustedFromRisk: 0.49,
-        },
+        id: "C009-reference",
+        url: referenceImage("ssl2_intact.jpg"),
+        alt: "Reference image for intact SSL 2 audio interface",
       },
     ],
-  },
+    hardFlags: [
+      "VisualClaimIntegrity: high-confidence physical implausibility",
+      "ImageReuse: claim image matches product reference source",
+    ],
+    explanation:
+      "The metal faceplate appears to fracture radially, which is not a credible aluminium failure mode, and the image also resembles the listing reference. Escalate for investigation.",
+    recommendedAction: "Escalate",
+    signals: [
+      visualSignal(0.94, 0.92, "implausible", "Aluminium should dent, scuff, or bend rather than fracture in radial crack lines across the faceplate.", {
+        contradictions: ["Radial cracks spread across metal instead of showing dents, bends, or scuffs."],
+        hardFlagTrigger: "physical_plausibility=implausible and confidence>0.85",
+      }),
+      imageReuseSignal(0.92, 0.94, "Claim image closely matches the product reference image for P005.", 3, {
+        matchingClaimId: "reference:P005",
+        hardFlagTrigger: "pHash distance <= 5",
+      }),
+      behaviouralSignal(0.86, "High refund rate, recent claim velocity, and a new high-value claim were triggered.", {
+        accountAgeDays: 22,
+        claimsLast30Days: 3,
+        refundRate: "0.60",
+        triggeredRules: ["refund_rate>0.5", "claims_last_30_days>=3", "account_age_days<30 and product.price_sgd>=50"],
+      }),
+    ],
+  }),
 ];
+
+function createVerdict(config: DemoClaimConfig): ClaimVerdictView {
+  return {
+    claim: {
+      id: config.id,
+      buyer: config.buyer,
+      product: config.product,
+      reason: config.reason,
+      submittedAt: config.submittedAt,
+      claimValue: config.claimValue,
+      riskScore: config.riskScore,
+      band: config.band,
+      workflowState: "Unreviewed",
+      flags: config.flags,
+      claimText: config.claimText,
+      productDetails: config.productDetails,
+      evidenceImages: config.evidenceImages,
+    },
+    riskScore: config.riskScore,
+    weightedScore: config.weightedScore,
+    band: config.band,
+    hardFlags: config.hardFlags,
+    explanation: config.explanation,
+    recommendedAction: config.recommendedAction,
+    signals: config.signals,
+  };
+}
+
+function visualSignal(
+  risk: number,
+  confidence: number,
+  physicalPlausibility: "plausible" | "implausible" | "uncertain",
+  evidence: string,
+  options: {
+    alternatives?: string[];
+    contradictions?: string[];
+    hardFlagTrigger?: string;
+    mismatches?: string[];
+    textImageMatch?: boolean;
+  } = {},
+): SignalView {
+  return {
+    name: "VisualClaimIntegrity",
+    risk,
+    confidence,
+    confidenceLabel: confidenceLabel(confidence),
+    evidence,
+    hardFlagTrigger: options.hardFlagTrigger,
+    details: {
+      physicalPlausibility,
+      plausibilityReasoning: evidence,
+      contradictions: options.contradictions ?? [],
+      alternativeExplanations: options.alternatives ?? [],
+      textImageMatch: options.textImageMatch ?? true,
+      mismatches: options.mismatches ?? [],
+    },
+  };
+}
+
+function imageReuseSignal(
+  risk: number,
+  confidence: number,
+  evidence: string,
+  pHashDistance: number,
+  options: {
+    hardFlagTrigger?: string;
+    matchedPriorEvidence?: { id: string; url: string; alt: string };
+    matchingClaimId?: string;
+  } = {},
+): SignalView {
+  return {
+    name: "ImageReuse",
+    risk,
+    confidence,
+    confidenceLabel: confidenceLabel(confidence),
+    evidence,
+    hardFlagTrigger: options.hardFlagTrigger,
+    details: {
+      matchFound: Boolean(options.matchingClaimId),
+      matchingClaimId: options.matchingClaimId,
+      pHashDistance,
+      matchedPriorEvidence: options.matchedPriorEvidence,
+    },
+  };
+}
+
+function behaviouralSignal(
+  risk: number,
+  evidence: string,
+  details: {
+    accountAgeDays: number;
+    claimsLast30Days: number;
+    refundRate: string;
+    triggeredRules: string[];
+    override?: string;
+  },
+): SignalView {
+  return {
+    name: "BehaviouralContext",
+    risk,
+    confidence: 0.7,
+    confidenceLabel: "Medium confidence",
+    evidence,
+    details,
+  };
+}
+
+function confidenceLabel(confidence: number): SignalView["confidenceLabel"] {
+  if (confidence >= 0.75) {
+    return "High confidence";
+  }
+
+  if (confidence >= 0.45) {
+    return "Medium confidence";
+  }
+
+  return "Low confidence";
+}

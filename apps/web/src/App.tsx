@@ -1,18 +1,23 @@
 import {
   AlertTriangle,
+  ArrowRight,
   ArrowUpDown,
   ChevronDown,
+  CheckCircle2,
   Clock3,
   Eye,
   FileText,
   ImageIcon,
+  LockKeyhole,
+  Mail,
   Package,
   Search,
   ShieldCheck,
+  Store,
   User,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
 import {
   applyQueueControls,
   getDefaultClaimId,
@@ -26,11 +31,15 @@ import type {
   EvidenceImage,
   RecommendedAction,
   RiskBand,
+  SellerSession,
   SignalName,
   SignalView,
   WorkflowState,
 } from "./types";
 import { loadClaimVerdicts } from "./model/claimVerdicts";
+import { mockVerdicts } from "./data/mockVerdicts";
+
+const DEMO_SELLER_EMAIL = "seller@demo.local";
 
 const actionToWorkflow: Record<RecommendedAction, WorkflowState> = {
   Release: "Released",
@@ -38,14 +47,19 @@ const actionToWorkflow: Record<RecommendedAction, WorkflowState> = {
   Escalate: "Escalated",
 };
 
+type AppScreen = "landing" | "login" | "dashboard";
+
 type LoadState =
+  | { status: "idle" }
   | { status: "loading" }
-  | { status: "ready" }
+  | { status: "ready"; source: "api" | "demo" }
   | { status: "error"; message: string };
 
 function App() {
+  const [screen, setScreen] = useState<AppScreen>("landing");
+  const [sellerSession, setSellerSession] = useState<SellerSession | null>(null);
   const [verdicts, setVerdicts] = useState<ClaimVerdictView[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
+  const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<QueueFilter>("All");
   const [sort, setSort] = useState<QueueSort>("Risk Score");
@@ -57,7 +71,13 @@ function App() {
   const [expandedSignal, setExpandedSignal] = useState<SignalName | null>("VisualClaimIntegrity");
 
   useEffect(() => {
+    if (screen !== "dashboard" || !sellerSession || verdicts.length > 0 || loadState.status !== "idle") {
+      return;
+    }
+
     let isCancelled = false;
+
+    setLoadState({ status: "loading" });
 
     loadClaimVerdicts()
       .then((loadedVerdicts) => {
@@ -70,7 +90,7 @@ function App() {
           Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
         );
         setSelectedId(getDefaultClaimId(loadedVerdicts));
-        setLoadState({ status: "ready" });
+        setLoadState({ status: "ready", source: "api" });
       })
       .catch((error: unknown) => {
         if (isCancelled) {
@@ -83,7 +103,7 @@ function App() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [loadState.status, screen, sellerSession, verdicts.length]);
 
   const queueItems = useMemo(
     () => applyQueueControls(verdicts, workflowByClaim, query, filter, sort),
@@ -147,10 +167,72 @@ function App() {
     }));
   }
 
+  function applyVerdicts(loadedVerdicts: ClaimVerdictView[]) {
+    setVerdicts(loadedVerdicts);
+    setWorkflowByClaim(
+      Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
+    );
+    setSelectedId(getDefaultClaimId(loadedVerdicts));
+    setActiveImageIndex(0);
+    setExpandedSignal("VisualClaimIntegrity");
+  }
+
+  function clearVerdicts() {
+    setVerdicts([]);
+    setWorkflowByClaim({});
+    setSelectedId("");
+    setNotesByClaim({});
+    setActiveImageIndex(0);
+    setExpandedSignal("VisualClaimIntegrity");
+  }
+
+  function handleEngineLogin(email: string) {
+    clearVerdicts();
+    setSellerSession({
+      id: "seller-demo",
+      displayName: "Demo Seller",
+      shopName: "Northstar Devices",
+      email,
+    });
+    setLoadState({ status: "idle" });
+    setScreen("dashboard");
+  }
+
+  function handleDemoLogin() {
+    applyVerdicts(mockVerdicts);
+    setSellerSession({
+      id: "seller-demo",
+      displayName: "Demo Seller",
+      shopName: "Northstar Devices",
+      email: DEMO_SELLER_EMAIL,
+    });
+    setLoadState({ status: "ready", source: "demo" });
+    setScreen("dashboard");
+  }
+
+  function handleSignOut() {
+    setSellerSession(null);
+    setScreen("landing");
+  }
+
+  if (screen === "landing") {
+    return <LandingPage onStart={() => setScreen("login")} />;
+  }
+
+  if (screen === "login" || !sellerSession) {
+    return (
+      <LoginScreen
+        onBack={() => setScreen("landing")}
+        onDemoLogin={handleDemoLogin}
+        onEngineLogin={handleEngineLogin}
+      />
+    );
+  }
+
   return (
     <div className="app-shell min-h-screen bg-ink-950 text-zinc-100">
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <Header loadState={loadState} />
+        <Header loadState={loadState} sellerSession={sellerSession} onSignOut={handleSignOut} />
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Metric label="Open claims" value={metrics.open} icon={<FileText aria-hidden="true" />} />
@@ -199,9 +281,254 @@ function App() {
   );
 }
 
-function Header({ loadState }: { loadState: LoadState }) {
+function LandingPage({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="app-shell min-h-screen bg-ink-950 text-zinc-100">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100">
+              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Claim Integrity</p>
+              <p className="text-xs text-zinc-500">Seller verification</p>
+            </div>
+          </div>
+
+          <button
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-100 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+            type="button"
+            onClick={onStart}
+          >
+            Seller login
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </header>
+
+        <main className="flex flex-1 flex-col">
+          <section className="landing-hero relative grid min-h-[82svh] items-center overflow-hidden py-14">
+            <div className="landing-scene" aria-hidden="true">
+              <div className="landing-board landing-board--main">
+                <div className="landing-board__top">
+                  <span>Risk Score</span>
+                  <strong>91</strong>
+                </div>
+                <div className="landing-board__meter">
+                  <span />
+                </div>
+                <div className="landing-board__rows">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+              <div className="landing-board landing-board--queue">
+                <div className="landing-queue-row landing-queue-row--hot" />
+                <div className="landing-queue-row landing-queue-row--warn" />
+                <div className="landing-queue-row landing-queue-row--ok" />
+              </div>
+              <div className="landing-signal-strip">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+
+            <div className="relative max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]" />
+                Live demo
+              </div>
+              <h1 className="mt-6 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-normal text-white sm:text-6xl lg:text-7xl">
+                Claim Integrity
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg">
+                Seller-facing triage for webhook-fed refund claims, with Risk Score, signal evidence,
+                and advisory actions in one operational queue.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <button
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-zinc-100 bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-950 transition-transform duration-150 ease-out-strong active:scale-[0.97]"
+                  type="button"
+                  onClick={onStart}
+                >
+                  Start seller workflow
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="inline-flex min-h-12 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-400">
+                  <ShieldCheck className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+                  No production auth in this demo
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-3 pb-6 md:grid-cols-3">
+            <LandingStep icon={<Store aria-hidden="true" />} label="Seller" value="Signs in with demo access" />
+            <LandingStep icon={<FileText aria-hidden="true" />} label="Claims" value="Loads seeded webhook-fed records" />
+            <LandingStep icon={<ShieldCheck aria-hidden="true" />} label="Triage" value="Reviews evidence and records action" />
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function LandingStep({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
+        <span className="flex h-4 w-4 [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
+        {label}
+      </div>
+      <p className="mt-3 text-sm font-medium text-zinc-200">{value}</p>
+    </div>
+  );
+}
+
+function LoginScreen({
+  onBack,
+  onDemoLogin,
+  onEngineLogin,
+}: {
+  onBack: () => void;
+  onDemoLogin: () => void;
+  onEngineLogin: (email: string) => void;
+}) {
+  const [email, setEmail] = useState(DEMO_SELLER_EMAIL);
+  const [error, setError] = useState("");
+
+  function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail.includes("@")) {
+      setError("Enter a seller email to continue.");
+      return;
+    }
+
+    setError("");
+    onEngineLogin(normalizedEmail);
+  }
+
+  return (
+    <div className="app-shell min-h-screen bg-ink-950 text-zinc-100">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1180px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+        <header className="flex items-center justify-between gap-4">
+          <button
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+            type="button"
+            onClick={onBack}
+          >
+            Claim Integrity
+          </button>
+          <div className="hidden items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400 sm:flex">
+            <LockKeyhole className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+            Demo access
+          </div>
+        </header>
+
+        <main className="grid flex-1 place-items-center py-10">
+          <section className="login-panel grid w-full max-w-5xl overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950/90 md:grid-cols-[minmax(0,0.9fr)_minmax(360px,1fr)]">
+            <div className="hidden border-r border-zinc-800 bg-ink-900 p-6 md:block">
+              <div className="flex h-full flex-col justify-between gap-10">
+                <div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100">
+                    <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <h1 className="mt-6 text-3xl font-semibold leading-tight text-white">Seller workspace</h1>
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">
+                    The live-demo path uses a local seller session and leaves production authentication out of scope.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {["Dashboard gated by login", "Actions remain seller-driven", "Claims come from seeded JSON"].map((item) => (
+                    <div key={item} className="flex items-center gap-2 text-sm text-zinc-300">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-300" aria-hidden="true" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <form className="p-5 sm:p-7" onSubmit={submitLogin}>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100">
+                  <Store className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Seller login</h2>
+                  <p className="text-sm text-zinc-500">Northstar Devices demo account</p>
+                </div>
+              </div>
+
+              <label className="mt-8 block">
+                <span className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Email</span>
+                <span className="mt-2 flex min-h-12 items-center gap-2 rounded-lg border border-zinc-800 bg-ink-900 px-3 py-2 text-sm text-zinc-300 focus-within:border-zinc-500">
+                  <Mail className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+                  <input
+                    className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+                    inputMode="email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                </span>
+              </label>
+
+              {error ? (
+                <p className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+                  {error}
+                </p>
+              ) : null}
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <button
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-zinc-100 bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-950 transition-transform duration-150 ease-out-strong active:scale-[0.97]"
+                  type="submit"
+                >
+                  Continue with login
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  className="inline-flex min-h-12 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm font-semibold text-zinc-300 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+                  type="button"
+                  onClick={onDemoLogin}
+                >
+                  Seller demo
+                </button>
+              </div>
+            </form>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function Header({
+  loadState,
+  onSignOut,
+  sellerSession,
+}: {
+  loadState: LoadState;
+  onSignOut: () => void;
+  sellerSession: SellerSession;
+}) {
   const statusLabel =
-    loadState.status === "ready" ? "Live JSON data" : loadState.status === "loading" ? "Loading claims" : "API unavailable";
+    loadState.status === "ready"
+      ? loadState.source === "api"
+        ? "Live JSON data"
+        : "Seller demo data"
+      : loadState.status === "loading"
+        ? "Loading claims"
+        : loadState.status === "error"
+          ? "API unavailable"
+          : "Preparing dashboard";
 
   return (
     <header className="flex flex-col gap-3 border-b border-zinc-800/80 pb-4 md:flex-row md:items-center md:justify-between">
@@ -211,19 +538,34 @@ function Header({ loadState }: { loadState: LoadState }) {
         </div>
         <div>
           <h1 className="text-lg font-semibold tracking-normal text-white">Claim Integrity</h1>
-          <p className="text-sm text-zinc-500">Reviewer queue</p>
+          <p className="text-sm text-zinc-500">Seller verification queue</p>
         </div>
       </div>
-      <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
-        <span
-          className={cx(
-            "h-2 w-2 rounded-full",
-            loadState.status === "error"
-              ? "bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.45)]"
-              : "bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]",
-          )}
-        />
-        {statusLabel}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
+          <Store className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+          <span className="max-w-[180px] truncate">{sellerSession.shopName}</span>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
+          <span
+            className={cx(
+              "h-2 w-2 rounded-full",
+              loadState.status === "error"
+                ? "bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.45)]"
+                : loadState.status === "loading"
+                  ? "bg-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.35)]"
+                  : "bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]",
+            )}
+          />
+          {statusLabel}
+        </div>
+        <button
+          className="min-h-10 rounded-md border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+          type="button"
+          onClick={onSignOut}
+        >
+          Sign out
+        </button>
       </div>
     </header>
   );
@@ -531,7 +873,7 @@ function VerdictPanel({
           <section className="rounded-lg border border-zinc-800 bg-ink-900 p-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-white">
               <ShieldCheck className="h-4 w-4 text-zinc-500" aria-hidden="true" />
-              Reviewer explanation
+              Seller explanation
             </div>
             <p className="mt-3 text-sm leading-6 text-zinc-300">{verdict.explanation}</p>
           </section>
@@ -566,7 +908,7 @@ function VerdictPanel({
               <span className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Override note</span>
               <textarea
                 className="mt-2 min-h-24 w-full resize-y rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors duration-150 ease-out-strong placeholder:text-zinc-600 focus:border-zinc-500"
-                placeholder="Add reviewer rationale"
+                placeholder="Add seller rationale"
                 value={note}
                 onChange={(event) => onNoteChange(event.target.value)}
               />

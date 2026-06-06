@@ -3,6 +3,13 @@ export type WorkflowState = "Unreviewed" | "Released" | "Evidence requested" | "
 export type RecommendedAction = "Release" | "Request evidence" | "Escalate";
 export type SignalName = "VisualClaimIntegrity" | "ImageReuse" | "BehaviouralContext";
 
+export interface SellerSession {
+  id: string;
+  displayName: string;
+  shopName: string;
+  email: string;
+}
+
 export interface EvidenceImage {
   id: string;
   url: string;

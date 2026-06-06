@@ -70,6 +70,173 @@ select option {
     linear-gradient(180deg, rgba(239, 68, 68, 0.08), transparent 34%);
 }
 
+.landing-hero {
+  border-bottom: 1px solid rgba(39, 39, 42, 0.82);
+}
+
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: 8% -10% 0 34%;
+  z-index: -1;
+  background:
+    linear-gradient(105deg, transparent 0 24%, rgba(255, 255, 255, 0.08) 24.4% 25%, transparent 25.4% 100%),
+    linear-gradient(108deg, transparent 0 38%, rgba(239, 68, 68, 0.12) 38.4% 38.8%, transparent 39.2% 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 42px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 42px);
+  mask-image: linear-gradient(to right, transparent, black 22%, black 78%, transparent);
+}
+
+.landing-scene {
+  position: absolute;
+  inset: 6% 0 8% 38%;
+  z-index: -1;
+  min-height: 520px;
+  pointer-events: none;
+}
+
+.landing-board {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid rgb(39 39 42);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(24, 24, 27, 0.92), rgba(9, 9, 11, 0.96)),
+    rgb(9 9 11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 72px rgba(0, 0, 0, 0.42);
+}
+
+.landing-board--main {
+  top: 14%;
+  right: 8%;
+  width: min(430px, 42vw);
+  min-height: 300px;
+  padding: 22px;
+}
+
+.landing-board--queue {
+  right: 34%;
+  bottom: 13%;
+  width: min(360px, 34vw);
+  min-height: 190px;
+  padding: 16px;
+  transform: translateY(14px);
+}
+
+.landing-board__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgb(113 113 122);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.landing-board__top strong {
+  color: rgb(252 165 165);
+  font-size: 76px;
+  line-height: 0.86;
+}
+
+.landing-board__meter {
+  height: 8px;
+  margin-top: 34px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(39 39 42);
+}
+
+.landing-board__meter span {
+  display: block;
+  width: 91%;
+  height: 100%;
+  border-radius: inherit;
+  background: rgb(248 113 113);
+}
+
+.landing-board__rows {
+  display: grid;
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.landing-board__rows span,
+.landing-queue-row,
+.landing-signal-strip span {
+  display: block;
+  border-radius: 6px;
+  background: rgb(39 39 42);
+}
+
+.landing-board__rows span {
+  height: 42px;
+}
+
+.landing-board__rows span:nth-child(2) {
+  width: 82%;
+}
+
+.landing-board__rows span:nth-child(3) {
+  width: 64%;
+}
+
+.landing-queue-row {
+  height: 44px;
+  margin-bottom: 10px;
+  border: 1px solid rgb(39 39 42);
+}
+
+.landing-queue-row--hot {
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.2), rgba(39, 39, 42, 0.82));
+}
+
+.landing-queue-row--warn {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), rgba(39, 39, 42, 0.76));
+}
+
+.landing-queue-row--ok {
+  margin-bottom: 0;
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.18), rgba(39, 39, 42, 0.72));
+}
+
+.landing-signal-strip {
+  position: absolute;
+  right: 3%;
+  bottom: 4%;
+  display: grid;
+  width: min(300px, 30vw);
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgb(39 39 42);
+  border-radius: 8px;
+  background: rgba(9, 9, 11, 0.82);
+}
+
+.landing-signal-strip span {
+  height: 28px;
+}
+
+.landing-signal-strip span:nth-child(1) {
+  width: 72%;
+}
+
+.landing-signal-strip span:nth-child(2) {
+  width: 92%;
+}
+
+.landing-signal-strip span:nth-child(3) {
+  width: 58%;
+}
+
+.login-panel {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 28px 90px rgba(0, 0, 0, 0.36);
+}
+
 .filter-control {
   --filter-index: 0;
   position: relative;
@@ -281,6 +448,48 @@ select option {
   flex: none;
   border-radius: 999px;
   background: rgb(9 9 11);
+}
+
+@media (max-width: 900px) {
+  .landing-scene {
+    inset: 22% -36% 4% 28%;
+    opacity: 0.56;
+  }
+
+  .landing-board--main {
+    right: 0;
+    width: min(380px, 78vw);
+  }
+
+  .landing-board--queue {
+    right: 18%;
+    width: min(320px, 72vw);
+  }
+
+  .landing-signal-strip {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-scene {
+    inset: 34% -72% 0 18%;
+    min-height: 420px;
+    opacity: 0.42;
+  }
+
+  .landing-board--main {
+    min-height: 250px;
+    padding: 16px;
+  }
+
+  .landing-board__top strong {
+    font-size: 58px;
+  }
+
+  .landing-board--queue {
+    bottom: 7%;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
