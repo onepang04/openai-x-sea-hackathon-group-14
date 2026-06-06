@@ -34,14 +34,7 @@ export interface Order {
   note?: string;
 }
 
-export interface ClaimDevAnnotations {
-  scenario_role: string;
-  ground_truth: "legitimate" | "fraudulent";
-  expected_band: string;
-  why: string;
-}
-
-export interface Claim {
+export interface PublicClaim {
   id: string;
   account_id: string;
   product_id: string;
@@ -49,16 +42,6 @@ export interface Claim {
   reason_category: ReasonCategory;
   claim_text: string;
   images: string[];
-  _dev?: ClaimDevAnnotations;
-}
-
-export type PublicClaim = Omit<Claim, "_dev">;
-
-export interface EnrichedClaim {
-  claim: Claim;
-  product: Product;
-  account: Account;
-  order: Order;
 }
 
 export interface PublicEnrichedClaim {
