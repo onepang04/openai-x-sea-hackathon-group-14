@@ -37,7 +37,7 @@ Codex model for ChatGPT sign-in is `gpt-5.5`; the repo includes
 
 ### 4. Configure model/API environment
 
-The app uses OpenAI for both Signal 1 vision and seller-facing narration.
+The app uses OpenAI for both Signal 1 vision and reviewer-facing narration.
 Codex auth is separate from these app API keys.
 
 ```bash
@@ -154,6 +154,6 @@ See `data/IMAGES_MANIFEST.md` for the scenario roles and exact matching rules.
 Use the staged sequence in `codex-master-prompt.md` and commit after each stage:
 
 0 scaffold -> 1 types/data -> 2 deterministic spine -> 3 vision/narrator ->
-4 API -> 5 seller login + UI -> 6 polish.
+4 API -> 5 reviewer login + UI -> 6 polish.
 
 `codex-build-plan.md` has the operator runbook and eval rhythm.

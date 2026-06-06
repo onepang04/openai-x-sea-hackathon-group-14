@@ -5,8 +5,8 @@ A concise export of architecture, scope, and build sequence. Authoritative build
 
 ## Architecture
 
-- Frontend: React + Vite + Tailwind — seller login + dashboard (claim list, verdict card, action buttons).
-- Backend: Node + TypeScript + Express — demo seller login, signal runner, aggregator, final LLM narration.
+- Frontend: React + Vite + Tailwind — reviewer login + internal dashboard (claim list, verdict card, action buttons).
+- Backend: Node + TypeScript + Express — demo reviewer login, signal runner, aggregator, final LLM narration.
 - Models: OpenAI vision for `VisualClaimIntegrity`; OpenAI text for the narrator. One `openai` client,
   two model ids (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`) on `OPENAI_API_KEY`;
   read model names from env. Narrator has a templated fallback since the score doesn't depend on it.
@@ -21,8 +21,8 @@ See `AGENTS.md` and `claim-integrity-agent-spec.md`.
 
 ## Scope
 
-- In: demo seller login, seller claim dashboard, 0–100 **Risk Score** + band (Low/Elevated/High) +
-  per-signal evidence + short LLM explanation for seller verification. Three signals only.
+- In: demo reviewer login, Shopee internal claim dashboard, 0–100 **Risk Score** + band (Low/Elevated/High) +
+  per-signal evidence + short LLM explanation for reviewer verification. Three signals only.
   Human-in-the-loop triage (no auto-deny). Runs on seeded JSON + images as webhook-fed claim data.
 - Out: no DB/ORM, no production auth, no EXIF/metadata/C2PA signal, no extra signals,
   no production deploy, no buyer UI, no manual claim input form, no real Shopee integration.
@@ -55,7 +55,7 @@ The active demo set is locked in `data/CANONICAL_DATASET.md`.
 
 ## API contract (locked)
 
-- `POST /api/seller/login` → demo seller session.
+- `POST /api/reviewer/login` → demo reviewer session.
 - `GET /api/claims` → claim summaries for the list view.
 - `POST /api/claim/:id/score` → full `ScoredClaim`.
 - `POST /api/claims/:id/score` → optional compatibility alias if already present.
@@ -64,7 +64,7 @@ The active demo set is locked in `data/CANONICAL_DATASET.md`.
 ## Build sequence (staged; commit + review after each)
 
 0 scaffold · 1 types + data layer · 2 deterministic spine (Image Reuse + Behavioural + aggregator,
-`runEval --no-vision`) · 3 vision + narrator (full eval) · 4 API · 5 seller login + verdict-card UI ·
+`runEval --no-vision`) · 3 vision + narrator (full eval) · 4 API · 5 reviewer login + verdict-card UI ·
 6 polish + rehearse.
 
 ## Files of interest

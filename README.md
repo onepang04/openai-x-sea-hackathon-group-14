@@ -1,11 +1,11 @@
 # Claim-Integrity Agent
 
 Hackathon demo for refund-claim integrity triage in a Shopee-style marketplace.
-A seller logs in, sees buyer refund claims for the seller's products, and uses
+A Shopee internal reviewer logs in, sees buyer refund claims, and uses
 the triage dashboard to verify them. Given a webhook-fed buyer refund claim,
 claim evidence image(s), product, account, and order context, the system produces a whole-number
 **Risk Score**, a Low/Elevated/High band, per-signal evidence, and a
-seller-facing explanation.
+reviewer-facing explanation.
 
 Claim intake is assumed to come from Shopee/platform data via webhook. The demo
 uses the seeded JSON files instead of a manual input form.

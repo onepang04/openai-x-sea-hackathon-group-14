@@ -4,9 +4,9 @@ Shared domain language for the claim-integrity demo. This glossary defines produ
 
 ## Language
 
-**Seller**:
-The marketplace merchant who receives buyer refund claims for products they sell and verifies those claims using the triage system.
-_Avoid_: Reviewer, operator, merchant account
+**Shopee Reviewer**:
+An internal Shopee user who reviews buyer refund claims using the triage system.
+_Avoid_: Seller, merchant, operator
 
 **Buyer**:
 The marketplace customer who submitted a refund claim after receiving an order.
@@ -30,4 +30,4 @@ _Avoid_: Verdict, decision, fraud label
 
 **Webhook-Fed Claim**:
 A Refund Claim made available to the system from Shopee/platform data rather than entered manually in this product.
-_Avoid_: Manual input, seller-created claim, form submission
+_Avoid_: Manual input, reviewer-created claim, form submission

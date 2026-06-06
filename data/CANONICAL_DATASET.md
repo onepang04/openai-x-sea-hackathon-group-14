@@ -54,11 +54,11 @@ that's the "calibrated, not trigger-happy" thesis. Don't force behaviour-only fr
 - Claim image filenames are neutral (content-describing — no "real"/"fake").
 - `_dev` is stripped before any model call and before any API response.
 - Don't renumber active claims. No DB, production auth, deploy infra, or manual claim input form.
-- Demo seller login is allowed; seeded claims may all belong to the demo seller unless seller/product ownership is explicitly added.
+- Demo reviewer login is allowed; seeded claims may all be visible to the demo Shopee reviewer unless reviewer assignment is explicitly added.
 - Only P009 carries a `reference_image`; don't invent fields; no DB / auth / deploy infra.
 
 ## API contract (frontend + backend build to this)
-- `POST /api/seller/login` → demo seller session for the dashboard.
+- `POST /api/reviewer/login` → demo reviewer session for the dashboard.
 - `GET /api/claims` → claim summaries (list view).
 - `POST /api/claims/:id/score` (alias `/api/claim/:id/score`) → full `ScoredClaim`.
 - `ScoredClaim = { claimId, riskScore (0–100 int), band: "Low"|"Elevated"|"High", hardFlag: string|null, signals: SignalResult[], explanation, recommendedAction }`
