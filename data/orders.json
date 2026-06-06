@@ -40,5 +40,12 @@
     "delivery_date": "2026-06-04",
     "items": 3,
     "total_claims_against_order": 3
+  },
+  {
+    "id": "ORD-1007",
+    "account_id": "A005",
+    "delivery_date": "2026-06-05",
+    "items": 1,
+    "total_claims_against_order": 1
   }
 ]
