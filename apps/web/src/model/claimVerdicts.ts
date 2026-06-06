@@ -8,7 +8,7 @@ import type {
   ClaimVerdictView,
   EvidenceImage,
   RecommendedAction,
-  SellerSession,
+  ReviewerSession,
   SignalName,
   SignalView,
 } from "../types";
@@ -24,12 +24,26 @@ export interface ClaimLoadProgress {
   cached: boolean;
 }
 
-export async function loginSeller(email: string): Promise<SellerSession> {
-  return requestJson<SellerSession>("/api/seller/login", {
+interface ApiReviewerSession {
+  id?: string;
+  displayName?: string;
+  teamName?: string;
+  shopName?: string;
+  email?: string;
+}
+
+export async function loginReviewer(email: string): Promise<ReviewerSession> {
+  const init = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
-  });
+  };
+
+  try {
+    return normalizeReviewerSession(await requestJson<ApiReviewerSession>("/api/reviewer/login", init), email);
+  } catch {
+    return normalizeReviewerSession(await requestJson<ApiReviewerSession>("/api/seller/login", init), email);
+  }
 }
 
 export async function loadClaimVerdicts(
@@ -254,6 +268,15 @@ function normalizeRecommendedAction(action: string | undefined, band: ScoredClai
   }
 
   return band === "Elevated" ? "Request evidence" : "Release";
+}
+
+function normalizeReviewerSession(session: ApiReviewerSession, requestedEmail: string): ReviewerSession {
+  return {
+    id: session.id ?? "reviewer-demo",
+    displayName: session.displayName ?? "Demo Reviewer",
+    teamName: session.teamName ?? session.shopName ?? "Shopee Review Ops",
+    email: session.email ?? requestedEmail,
+  };
 }
 
 function formatReasonCategory(reasonCategory: PublicClaim["reason_category"]): string {

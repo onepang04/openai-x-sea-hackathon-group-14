@@ -169,7 +169,7 @@ export const mockVerdicts: ClaimVerdictView[] = [
     ],
     hardFlags: ["ImageReuse: near-duplicate evidence image with claim C003"],
     explanation:
-      "This claim reuses the same skincare photo as C003 from a different account. Escalation is recommended for seller review.",
+      "This claim reuses the same skincare photo as C003 from a different account. Escalation is recommended for reviewer follow-up.",
     recommendedAction: "Escalate",
     signals: [
       visualSignal(0.36, 0.6, "uncertain", "The jar crack is possible for compressed plastic packaging.", {
@@ -215,7 +215,7 @@ export const mockVerdicts: ClaimVerdictView[] = [
     ],
     hardFlags: [],
     explanation:
-      "Ceramic cracking is physically possible, but the image does not support the buyer's bottom-damage description and the account has high recent refund velocity. Escalate for seller review.",
+      "Ceramic cracking is physically possible, but the image does not support the buyer's bottom-damage description and the account has high recent refund velocity. Escalate for reviewer follow-up.",
     recommendedAction: "Escalate",
     signals: [
       visualSignal(0.76, 0.78, "uncertain", "The visible side cracking does not match the claim text describing bottom damage.", {
@@ -358,7 +358,7 @@ export const mockVerdicts: ClaimVerdictView[] = [
     riskScore: 92,
     weightedScore: 83,
     band: "High",
-    flags: ["Physical implausibility", "Reference match"],
+    flags: ["Physical implausibility", "Reference match", "SynthID watermark detected"],
     claimText: "The audio interface arrived with the monitor knob snapped off and cracks spreading across the top panel.",
     productDetails:
       "Audio. Aluminium chassis with plastic control knobs. Typical failures include cracked knobs, scuffs or dents on the metal faceplate, and bent rear I/O connectors.",
@@ -379,7 +379,7 @@ export const mockVerdicts: ClaimVerdictView[] = [
       "ImageReuse: claim image matches product reference source",
     ],
     explanation:
-      "The metal faceplate appears to fracture radially, which is not a credible aluminium failure mode, and the image also resembles the listing reference. Escalate for investigation.",
+      "The metal faceplate appears to fracture radially, which is not a credible aluminium failure mode, the image resembles the listing reference, and a SynthID watermark is present. Escalate for investigation.",
     recommendedAction: "Escalate",
     signals: [
       visualSignal(0.94, 0.92, "implausible", "Aluminium should dent, scuff, or bend rather than fracture in radial crack lines across the faceplate.", {
