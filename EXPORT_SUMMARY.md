@@ -63,6 +63,10 @@ Weights: Visual = 1.0, ImageReuse = 0.9, Behavioural = 0.7. Scale `score01 * 100
 - [ ] Aggregator + hard-flag logic + `/api/claim/:id/score` route.
 - [ ] Minimal React verdict card (band badge, per-signal evidence, LLM prose).
 
+Branching workflow
+
+- Follow `master` → `staging` → `feature`. Create feature branches from `staging` and open PRs targeting `staging` for review and integration. `staging` is pushed to `origin/staging` and visible to collaborators.
+
 ## Files of interest
 
 - [AGENTS.md](AGENTS.md)
