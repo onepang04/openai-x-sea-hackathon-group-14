@@ -115,8 +115,8 @@
     "_dev": {
       "scenario_role": "text-image mismatch fraud",
       "ground_truth": "fraudulent",
-      "expected_band": "High",
-      "why": "the claim says huge cracks at the bottom but the photo shows the crack across the printed side; Signal 1 should flag the text-image mismatch and the risky account pushes it high"
+      "expected_band": "Elevated",
+      "why": "the claim says huge cracks at the bottom but the photo shows the crack across the printed side; Signal 1 flags the text-image mismatch, but a mismatch is not a hard flag, so with the risky account it lands Elevated (route to human review)"
     }
   },
   {

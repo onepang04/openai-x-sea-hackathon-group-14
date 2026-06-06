@@ -92,24 +92,30 @@ async function main() {
     const imageReuse = findSignal(scoredClaim, "ImageReuse");
     const behavioural = findSignal(scoredClaim, "BehaviouralContext");
 
-    if (claim.id === "C003") {
-      assertCondition(scoredClaim.band === "High", "C003 must be High");
-      assertCondition(matchedClaimId(imageReuse) === "C004", "C003 must match C004 through ImageReuse");
-      assertCondition((minDistance(imageReuse) ?? Number.POSITIVE_INFINITY) < 5, "C003 pHash distance must be <5");
+    // Image-reuse pair: C005 and C020 share the same claim photo across two accounts.
+    if (claim.id === "C005") {
+      assertCondition(scoredClaim.band === "High", "C005 must be High (image reuse)");
+      assertCondition(matchedClaimId(imageReuse) === "C020", "C005 must match C020 through ImageReuse");
+      assertCondition((minDistance(imageReuse) ?? Number.POSITIVE_INFINITY) < 5, "C005 pHash distance must be <5");
     }
 
-    if (claim.id === "C004") {
-      assertCondition(scoredClaim.band === "High", "C004 must be High");
-      assertCondition(matchedClaimId(imageReuse) === "C003", "C004 must match C003 through ImageReuse");
-      assertCondition((minDistance(imageReuse) ?? Number.POSITIVE_INFINITY) < 5, "C004 pHash distance must be <5");
+    if (claim.id === "C020") {
+      assertCondition(scoredClaim.band === "High", "C020 must be High (image reuse)");
+      assertCondition(matchedClaimId(imageReuse) === "C005", "C020 must match C005 through ImageReuse");
+      assertCondition((minDistance(imageReuse) ?? Number.POSITIVE_INFINITY) < 5, "C020 pHash distance must be <5");
     }
 
-    if (["C006", "C007", "C008"].includes(claim.id)) {
+    // Doctored-from-listing: C019's claim photo is edited from product P009's reference image.
+    if (claim.id === "C019") {
+      assertCondition(scoredClaim.band === "High", "C019 must be High (doctored-from-listing)");
+      assertCondition(Boolean(scoredClaim.hardFlag), "C019 must hard-flag via reference match");
+      assertCondition((minDistance(imageReuse) ?? Number.POSITIVE_INFINITY) < 5, "C019 reference pHash distance must be <5");
+    }
+
+    // Logistics cluster: C010-C012 share one order (ORD-2010); the override pulls the cluster to Low.
+    if (["C010", "C011", "C012"].includes(claim.id)) {
       assertCondition(logisticsOverride(behavioural), `${claim.id} must apply logistics override`);
-    }
-
-    if (claim.id === "C006") {
-      assertCondition(scoredClaim.band !== "High", "C006 must not be High");
+      assertCondition(scoredClaim.band === "Low", `${claim.id} logistics cluster must be Low`);
     }
 
     console.log(

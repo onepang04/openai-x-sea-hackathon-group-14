@@ -19,7 +19,7 @@ grafted in so every signal capability has both a "fires" and a "stays-calm" exam
 | C005 | skincare (P003) | fraudulent | High | **S2 image reuse** (pair with C020) |
 | C006 | skincare (P003) | fraudulent | Elevated | S3 behaviour |
 | C007 | skincare (P003) | legitimate | Low | S1 restraint |
-| C008 | mug (P004) | fraudulent | High | **S1 text-image mismatch** ("bottom" vs side crack) |
+| C008 | mug (P004) | fraudulent | Elevated | **S1 text-image mismatch** ("bottom" vs side crack; mismatch isn't a hard flag → Elevated) |
 | C009 | mug (P004) | legitimate | Low | S1 restraint |
 | C010 | container (P005) | legitimate | Low | **S3 logistics override** (ORD-2010) |
 | C011 | container (P005) | legitimate | Low | **S3 logistics override** (ORD-2010) |
