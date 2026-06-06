@@ -1,0 +1,67 @@
+[
+  {
+    "id": "P001",
+    "name": "Solid State Logic SSL 2 USB Audio Interface",
+    "category": "Audio",
+    "material": "aluminium chassis with plastic control knobs",
+    "typical_failure_modes": [
+      "a knob cracks or pulls off the potentiometer shaft",
+      "scuffs, scratches, or dents on the metal faceplate",
+      "bent or damaged rear I/O connectors"
+    ],
+    "price_sgd": 399,
+    "reference_image": "ssl2_intact.jpg"
+  },
+  {
+    "id": "P002",
+    "name": "Ralph Lauren Custom Fit Oxford Shirt",
+    "category": "Fashion",
+    "material": "100% cotton woven oxford",
+    "typical_failure_modes": [
+      "tears along stitched seams",
+      "fraying at hems, cuffs, and collar",
+      "small snag holes with distorted surrounding weave"
+    ],
+    "price_sgd": 189,
+    "reference_image": "shirt_intact.jpg"
+  },
+  {
+    "id": "P003",
+    "name": "Leather Laptop Backpack",
+    "category": "Bags",
+    "material": "leather exterior with woven nylon lining",
+    "typical_failure_modes": [
+      "lining tears at seams or stress points",
+      "zipper separation or pull-tab detachment",
+      "strap stitching failure"
+    ],
+    "price_sgd": 129,
+    "reference_image": "backpack_intact.jpg"
+  },
+  {
+    "id": "P004",
+    "name": "A4 Photo Frame (glass front)",
+    "category": "Home & Living",
+    "material": "glass pane in a wooden frame",
+    "typical_failure_modes": [
+      "glass shatters into shards radiating from impact points",
+      "cracked glass with displaced fragments",
+      "chipped or split frame corners"
+    ],
+    "price_sgd": 18,
+    "_note": "Legitimate case C005 — the false-positive trap. Real shattered glass: dramatic but genuine, plausible damage. No reference_image (genuine photo, not doctored)."
+  },
+  {
+    "id": "P005",
+    "name": "Calcifer Resin Storage Tray",
+    "category": "Home & Living",
+    "material": "painted resin",
+    "typical_failure_modes": [
+      "cracks or breaks into pieces from impact",
+      "chipped paint or surface",
+      "snapped protruding features"
+    ],
+    "price_sgd": 45,
+    "reference_image": "calcifer_intact.jpg"
+  }
+]

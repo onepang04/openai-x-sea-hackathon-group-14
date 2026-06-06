@@ -1,21 +1,17 @@
-# Setup — Claim-Integrity Agent (Hackathon Day)
+# Setup - Claim-Integrity Agent
 
-Do this once before 8:30am. Pick your OS section.
+Do this once before the hackathon build window.
 
----
-
-## macOS (MacBook Pro)
+## macOS
 
 ### 1. Install prerequisites
 
 ```bash
-# Install Homebrew if not already installed
+# Install Homebrew if needed:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install Node.js 20+
 brew install node
 
-# Verify
 node --version   # should be v20+
 git --version
 ```
@@ -27,159 +23,140 @@ git clone https://github.com/onepang04/openai-x-sea-hackathon-group-14.git
 cd openai-x-sea-hackathon-group-14
 ```
 
-### 3. Install Codex CLI
+### 3. Install and authenticate Codex
 
 ```bash
 npm install -g @openai/codex
-
-# Verify
 codex --version
+codex login
 ```
 
-### 4. Authenticate with ChatGPT Pro
+Sign in with a ChatGPT account that has Codex access. The current recommended
+Codex model for ChatGPT sign-in is `gpt-5.5`; the repo includes
+`.codex/config.toml` with that model.
+
+### 4. Configure model/API environment
+
+The app uses OpenAI for Signal 1 vision and SEA-LION for reviewer narration.
+Codex auth is separate from these app API keys.
 
 ```bash
-codex auth login
-# Opens a browser — sign in with your ChatGPT Pro account
-# This uses your Pro subscription, NOT your API credits
+cp .env.example .env
 ```
 
-### 5. Set your API key for the app's OpenAI calls
-
-The API key is for Signal 1 (vision) + narrator — not for Codex itself.
+Fill in:
 
 ```bash
-# Add to ~/.zshrc so it persists across terminals
-echo 'export OPENAI_API_KEY=sk-...' >> ~/.zshrc
-source ~/.zshrc
+OPENAI_API_KEY=sk-...
+OPENAI_VISION_MODEL=<verify-current-openai-vision-model>
+SEA_LION_API_KEY=...
+SEA_LION_MODEL=<verify-via-sea-lion-v1-models>
 ```
 
-### 6. Copy the Codex config
+Do not commit real keys. The backend should read model IDs from env vars, not
+hardcoded defaults.
+
+### 5. Copy the Codex config if desired
+
+Codex can read the project config after you trust the repo. To also make it your
+user-level default:
 
 ```bash
-mkdir -p ~/.codex && cp .codex/config.toml ~/.codex/config.toml
+mkdir -p ~/.codex
+cp .codex/config.toml ~/.codex/config.toml
 ```
 
-### 7. Smoke test — verify a vision call works
+### 6. Smoke test the OpenAI SDK
+
+Run this after setting `OPENAI_API_KEY` and `OPENAI_VISION_MODEL`:
 
 ```bash
-npm install openai   # temporary, in any folder
+npm install openai
 node -e "
 const OpenAI = require('openai');
 const client = new OpenAI();
+const model = process.env.OPENAI_VISION_MODEL;
+if (!model) throw new Error('Set OPENAI_VISION_MODEL first');
 client.chat.completions.create({
-  model: 'gpt-4o',
+  model,
   messages: [{ role: 'user', content: 'Say hello.' }]
 }).then(r => console.log(r.choices[0].message.content));
 "
 ```
 
-### 8. Launch Codex
+### 7. Launch Codex
 
 ```bash
 codex
 ```
 
----
+Paste `codex-master-prompt.md` as the first build prompt when you are ready to
+start staged implementation.
 
-## Windows (ASUS)
+## Windows
 
-### 1. Install prerequisites
-
-- Node.js 20+ — download from https://nodejs.org (LTS installer)
-- Git — download from https://git-scm.com
-- Verify in PowerShell:
+Install Node.js 20+ from https://nodejs.org and Git from https://git-scm.com,
+then run in PowerShell:
 
 ```powershell
-node --version   # should be v20+
+node --version
 git --version
-```
-
-### 2. Clone the repo
-
-```powershell
-git clone https://github.com/onepang04/openai-x-sea-hackathon-group-14.git
-cd openai-x-sea-hackathon-group-14
-```
-
-### 3. Install Codex CLI
-
-```powershell
 npm install -g @openai/codex
-
-# Verify
 codex --version
+codex login
 ```
 
-### 4. Authenticate with ChatGPT Pro
+Set app environment variables:
 
 ```powershell
-codex auth login
-# Opens a browser — sign in with your ChatGPT Pro account
-# This uses your Pro subscription, NOT your API credits
-```
-
-### 5. Set your API key for the app's OpenAI calls
-
-```powershell
-# Set for current session
 $env:OPENAI_API_KEY = "sk-..."
+$env:OPENAI_VISION_MODEL = "<verify-current-openai-vision-model>"
+$env:SEA_LION_API_KEY = "..."
+$env:SEA_LION_MODEL = "<verify-via-sea-lion-v1-models>"
+```
 
-# Set permanently (user-level)
+Set them permanently if this will be the demo machine:
+
+```powershell
 [System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-...", "User")
+[System.Environment]::SetEnvironmentVariable("OPENAI_VISION_MODEL", "<verify-current-openai-vision-model>", "User")
+[System.Environment]::SetEnvironmentVariable("SEA_LION_API_KEY", "...", "User")
+[System.Environment]::SetEnvironmentVariable("SEA_LION_MODEL", "<verify-via-sea-lion-v1-models>", "User")
 ```
 
-### 6. Copy the Codex config
+## Data assets
 
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex"
-Copy-Item ".codex\config.toml" "$env:USERPROFILE\.codex\config.toml"
-```
+The JSON files are committed under `data/`:
 
-### 7. Smoke test — verify a vision call works
+- `data/accounts.json`
+- `data/claims.json`
+- `data/orders.json`
+- `data/products.json`
 
-```powershell
-node -e "const OpenAI = require('openai'); const client = new OpenAI(); client.chat.completions.create({ model: 'gpt-4o', messages: [{ role: 'user', content: 'Say hello.' }] }).then(r => console.log(r.choices[0].message.content));"
-```
+Drop the image files before the demo:
 
-### 8. Launch Codex
+Claim images in `data/images/claims/`:
 
-```powershell
-codex
-```
+- `ssl2_broken.jpg`
+- `shirt_torn.jpg`
+- `backpack_torn.jpg`
+- `frame_shattered.jpg`
+- `calcifer_broken.jpg`
 
----
+Reference images in `data/images/reference/`:
 
-## Both machines — after setup
+- `ssl2_intact.jpg`
+- `shirt_intact.jpg`
+- `backpack_intact.jpg`
+- `calcifer_intact.jpg`
 
-**First message every Codex session:**
-```
-Read AGENTS.md and claim-integrity-agent-spec.md. Summarise the architecture, scope,
-and build sequence. Do not edit files.
-```
-
-**Drop images before 8:30am** — see `data/IMAGES_MANIFEST.md` for the 7 filenames:
-```
-images/claims/C001_mug_chip.jpg
-images/claims/C002_phone_fake_crack.jpg
-images/claims/shared_fake_01.jpg
-images/claims/C005_shirt_fake_tear.jpg
-images/claims/C006_glass_real_shatter.jpg
-images/claims/C007_phone_logistics.jpg
-images/claims/C008_mug_logistics.jpg
-```
-
----
+See `data/IMAGES_MANIFEST.md` for the scenario roles and exact matching rules.
 
 ## Day-of rhythm
 
-```
-Hr 0–1   B: scaffold. A: Signal 1 standalone. C: UI against mocked score. D: data drop-in.
-Hr 1–4   A: tune Signal 1 (critical path). B: Signals 2+3 + aggregator. C: claim list + verdict card.
-Hr 4–6   B+A: plug real Signal 1 in. D: frontend↔backend integration.
-Hr 6–8   D: end-to-end across all 8 scenarios. A/B/C fix what surfaces.
-Hr 8–9   D+C: demo polish. Backup video.
-Hr 9–10  Whole team: rehearse 90-second demo 3×. Record backup.
-```
+Use the staged sequence in `codex-master-prompt.md` and commit after each stage:
 
-See `codex-build-plan.md` for full phase-by-phase Codex prompts.
+0 scaffold -> 1 types/data -> 2 deterministic spine -> 3 vision/narrator ->
+4 API -> 5 UI -> 6 polish.
+
+`codex-build-plan.md` has the operator runbook and eval rhythm.
