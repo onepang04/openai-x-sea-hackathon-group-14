@@ -29,6 +29,25 @@ app.get("/api/claims/:id", (req, res) => {
   }
 });
 
+app.get("/api/verdicts", async (_req, res) => {
+  try {
+    const verdicts = await Promise.all(
+      claims.map(async (claim) => {
+        const enrichedClaim = getEnrichedClaim(claim.id);
+
+        return {
+          enrichedClaim: toPublicEnrichedClaim(enrichedClaim),
+          score: await scoreClaim(enrichedClaim),
+        };
+      }),
+    );
+
+    res.json(verdicts);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
 async function scoreClaimHandler(req: express.Request, res: express.Response) {
   try {
     const enrichedClaim = getEnrichedClaim(req.params.id);

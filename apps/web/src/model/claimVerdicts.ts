@@ -26,6 +26,15 @@ export async function loginSeller(email: string): Promise<SellerSession> {
 }
 
 export async function loadClaimVerdicts(): Promise<ClaimVerdictView[]> {
+  try {
+    const verdicts = await requestJson<ApiClaimVerdict[]>("/api/verdicts");
+    return verdicts.map(({ enrichedClaim, score }) => toClaimVerdictView(enrichedClaim, score));
+  } catch {
+    return loadClaimVerdictsIndividually();
+  }
+}
+
+async function loadClaimVerdictsIndividually(): Promise<ClaimVerdictView[]> {
   const claims = await requestJson<PublicClaim[]>("/api/claims");
 
   const verdicts = await Promise.all(
@@ -40,6 +49,11 @@ export async function loadClaimVerdicts(): Promise<ClaimVerdictView[]> {
   );
 
   return verdicts;
+}
+
+interface ApiClaimVerdict {
+  enrichedClaim: PublicEnrichedClaim;
+  score: ScoredClaim;
 }
 
 async function requestScore(claimId: string): Promise<ScoredClaim> {
