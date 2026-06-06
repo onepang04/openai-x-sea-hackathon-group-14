@@ -12,7 +12,7 @@ import type {
   SignalView,
 } from "../types";
 
-const DEFAULT_API_BASE_URL = "http://localhost:3000";
+const DEFAULT_DEV_API_BASE_URL = "http://localhost:3000";
 
 export const apiBaseUrl = getApiBaseUrl();
 
@@ -193,6 +193,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getApiBaseUrl(): string {
-  const env = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+  const env = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? DEFAULT_DEV_API_BASE_URL : "");
   return env.replace(/\/$/, "");
 }
