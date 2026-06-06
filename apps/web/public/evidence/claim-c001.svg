@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-label="Ceramic mug with chipped rim">
+  <rect width="960" height="720" fill="#0d0d0d"/>
+  <path d="M0 520h960v200H0z" fill="#151515"/>
+  <path d="M88 520h784" stroke="#2f2f2f" stroke-width="2"/>
+  <g transform="translate(260 150)">
+    <path d="M80 80h330l-28 350H108z" fill="#e8e2d8"/>
+    <path d="M80 80h330l-28 350H108z" fill="none" stroke="#f8f8f8" stroke-width="8"/>
+    <path d="M410 150c92 0 110 150 16 172" fill="none" stroke="#d6d0c6" stroke-width="34" stroke-linecap="round"/>
+    <path d="M150 80c14 22 39 22 53 0 15 24 43 22 58 0" fill="#0d0d0d"/>
+    <path d="M148 80c10 26 44 38 65 8" fill="none" stroke="#8b8175" stroke-width="6"/>
+    <ellipse cx="245" cy="430" rx="136" ry="20" fill="#bfb8ad"/>
+  </g>
+  <path d="M154 120h652" stroke="#262626" stroke-width="2" stroke-dasharray="10 18"/>
+</svg>

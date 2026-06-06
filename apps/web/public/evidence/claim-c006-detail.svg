@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-label="Glass fragments detail evidence">
+  <rect width="960" height="720" fill="#0c0c0c"/>
+  <path d="M0 500h960v220H0z" fill="#151515"/>
+  <g transform="translate(160 250)" fill="#d9fbf6" opacity=".82" stroke="#f8fffd" stroke-width="4">
+    <path d="M40 206 160 130 118 262z"/>
+    <path d="M220 92 348 178 208 230z"/>
+    <path d="M410 132 514 66 560 216z"/>
+    <path d="M590 204 760 158 704 296z"/>
+    <path d="M330 268 454 236 414 334z"/>
+  </g>
+  <path d="M126 116h708" stroke="#292929" stroke-width="2" stroke-dasharray="9 18"/>
+</svg>

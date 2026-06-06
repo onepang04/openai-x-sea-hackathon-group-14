@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-label="T-shirt seam tear evidence">
+  <rect width="960" height="720" fill="#0c0c0c"/>
+  <path d="M0 520h960v200H0z" fill="#151515"/>
+  <g transform="translate(245 115)">
+    <path d="M150 65 65 130l72 96 55-44v340h235V182l55 44 72-96-86-65-78 35H228z" fill="#e7e1d5"/>
+    <path d="M150 65 65 130l72 96 55-44v340h235V182l55 44 72-96-86-65-78 35H228z" fill="none" stroke="#f6f0e6" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M388 182v298" stroke="#a9a093" stroke-width="5" stroke-dasharray="10 12"/>
+    <path d="M386 290c-20 15-12 39-30 54 25 9 13 39 33 55 18-19 4-41 28-59-26-11-9-34-31-50z" fill="#0c0c0c"/>
+    <path d="M359 333c20 7 35 8 55 1" stroke="#b4aa9c" stroke-width="4"/>
+  </g>
+  <path d="M150 116h660" stroke="#292929" stroke-width="2" stroke-dasharray="9 18"/>
+</svg>

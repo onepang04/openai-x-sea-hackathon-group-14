@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-label="Mug transit damage evidence">
+  <rect width="960" height="720" fill="#0d0d0d"/>
+  <path d="M0 520h960v200H0z" fill="#151515"/>
+  <g transform="translate(255 145)">
+    <path d="M80 80h330l-28 350H108z" fill="#e6ded2"/>
+    <path d="M80 80h330l-28 350H108z" fill="none" stroke="#f8f8f8" stroke-width="8"/>
+    <path d="M410 150c92 0 110 150 16 172" fill="none" stroke="#d6d0c6" stroke-width="34" stroke-linecap="round"/>
+    <g stroke="#1b1b1b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M260 112 222 188 262 245"/>
+      <path d="M222 188 168 224"/>
+      <path d="M262 245 226 324"/>
+      <path d="M262 245 320 298"/>
+    </g>
+    <ellipse cx="245" cy="430" rx="136" ry="20" fill="#bfb8ad"/>
+  </g>
+  <path d="M154 120h652" stroke="#262626" stroke-width="2" stroke-dasharray="10 18"/>
+</svg>

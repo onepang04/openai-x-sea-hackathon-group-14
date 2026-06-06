@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-label="Phone transit damage evidence">
+  <rect width="960" height="720" fill="#0c0c0c"/>
+  <path d="M0 520h960v200H0z" fill="#151515"/>
+  <g transform="translate(320 70)">
+    <rect width="320" height="565" rx="42" fill="#111111" stroke="#3f3f46" stroke-width="8"/>
+    <rect x="26" y="42" width="268" height="482" rx="22" fill="#1f1f22"/>
+    <g stroke="#f4f4f5" stroke-width="5" stroke-linecap="round">
+      <path d="M42 460 112 396 198 438"/>
+      <path d="M112 396 86 318"/>
+      <path d="M112 396 176 318"/>
+      <path d="M198 438 250 382"/>
+      <path d="M198 438 246 494"/>
+    </g>
+    <path d="M26 434c42 35 98 55 168 62 42 4 77 14 100 28H26z" fill="#2a2a2f" opacity=".75"/>
+  </g>
+  <path d="M146 116h668" stroke="#27272a" stroke-width="2" stroke-dasharray="8 18"/>
+</svg>
