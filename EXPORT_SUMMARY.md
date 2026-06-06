@@ -1,80 +1,78 @@
 # Claim-Integrity Agent — Summary Export
 
-A concise export of architecture, scope, and build sequence for the Claim-Integrity Agent demo.
+A concise export of architecture, scope, and build sequence. Authoritative build context for Codex is
+`AGENTS.md` + `codex-master-prompt.md`; this is a human overview.
 
 ## Architecture
 
-- Frontend: React + Vite + Tailwind — reviewer-facing UI (claim list, verdict card).
+- Frontend: React + Vite + Tailwind — reviewer UI (claim list, verdict card, action buttons).
 - Backend: Node + TypeScript + Express — signal runner, aggregator, final LLM narration.
-- Models: OpenAI vision + text models (vision call for `VisualClaimIntegrity`, LLM for reviewer prose).
-- Data: in-memory JSON files: `claims.json`, `accounts.json`, `products.json`, `orders.json` + pHash index for images.
-- Signals (pluggable):
-  - `VisualClaimIntegrity` — physical-plausibility + text-image consistency (vision model).
-  - `ImageReuse` — perceptual-hash (sharp + imghash) dedup; Hamming distance checks.
-  - `BehaviouralContext` — deterministic account/order heuristics (refund rates, recent claims, shared-order override).
+- Models: OpenAI vision for `VisualClaimIntegrity`; SEA-LION (AI Singapore) for the narrator, via its
+  OpenAI-compatible API (`https://api.sea-lion.ai/v1`, `SEA_LION_API_KEY`). Same SDK, two clients;
+  read model names from env. Narrator has a fallback (OpenAI/templated) since the score doesn't depend on it.
+- Data: in-memory JSON in `data/` (`claims.json`, `accounts.json`, `products.json`, `orders.json`),
+  images in `data/images/claims/` and `data/images/reference/`, + a pHash index built at startup.
+- Signals (pluggable, all implement `Signal.evaluate(EnrichedClaim)`):
+  - `VisualClaimIntegrity` — physical-plausibility + text-image consistency (vision model). Prompt in `signal-1-prompt.md`.
+  - `ImageReuse` — perceptual hash (sharp + imghash); Hamming distance vs other claims AND product reference photos.
+  - `BehaviouralContext` — deterministic account/order heuristics, incl. shared-order logistics override that *lowers* risk.
 
-See the repo docs: [AGENTS.md](AGENTS.md) and [claim-integrity-agent-spec.md](claim-integrity-agent-spec.md).
+See `AGENTS.md` and `claim-integrity-agent-spec.md`.
 
-## Scope (in-scope / out-of-scope)
+## Scope
 
-- In-scope:
-  - Produce a 0–100 **Risk Score**, band (Low/Elevated/High), per-signal evidences, and a short LLM explanation for a human reviewer.
-  - Three signals only; human-in-the-loop triage (no auto-deny).
-  - Demo runs against seeded JSON + images in the repo.
-- Out-of-scope (explicit):
-  - No DB/ORM, no auth, no EXIF/metadata signal, no extra signals, no production deployment. See `AGENTS.md`.
+- In: 0–100 **Risk Score** + band (Low/Elevated/High) + per-signal evidence + short LLM explanation
+  for a human reviewer. Three signals only. Human-in-the-loop triage (no auto-deny). Runs on seeded
+  JSON + images.
+- Out: no DB/ORM, no auth, no EXIF/metadata/C2PA signal, no extra signals, no production deploy,
+  no buyer/seller UI, no real Shopee integration.
 
 ## Scoring & Aggregation
 
-- Per-signal output: `{ name, risk (0..1), confidence (0..1), evidence, raw? }`.
-- Weighted aggregation:
-
-```
-score01 = Σ(weight·risk·confidence) / Σ(weight·confidence)
-```
-
-Weights: Visual = 1.0, ImageReuse = 0.9, Behavioural = 0.7. Scale `score01 * 100` → whole-number Risk Score.
+- Per-signal: `{ name, risk (0..1), confidence (0..1), evidence, raw? }`.
+- `score01 = Σ(weight·risk·confidence) / Σ(weight·confidence)` over **available** signals only.
+- Weights: Visual 1.0, ImageReuse 0.9, Behavioural 0.7. `riskScore = round(score01 · 100)`.
 - Bands: Low (<30), Elevated (30–65), High (>65).
-- Hard flags override to High:
-  - Visual: `physical_plausibility = implausible` AND `confidence > 0.85`.
-  - ImageReuse: pHash Hamming distance < 5.
+- Hard flags force High (riskScore ≥ 75): Visual `implausible` AND `confidence > 0.85`; ImageReuse distance < 5.
 
 ## Per-claim runtime flow
 
-1. Run all signals in parallel: `await Promise.all(signals.map(s => s.evaluate(claim)))`.
-2. Aggregate available signals with weights; apply hard flags if present.
-3. Call LLM narration with score + per-signal evidences → 2–3 sentence explanation + recommended action.
+1. Run signals with `Promise.allSettled(...)` — a failed signal is dropped, not fatal.
+2. Aggregate available signals; apply hard flags.
+3. SEA-LION narration (with fallback) → 2–3 sentence explanation + recommended action.
 
-## Build Sequence / Hackathon Timeline (recommended)
+## Demo scenarios (6)
 
-- Hr 0–1: Backend scaffold + lock API contract (`POST /api/claim/:id/score`), Signal-1 prompt skeleton, frontend mock.
-- Hr 1–4: Tune Signal 1 on scenarios; implement Signals 2 & 3; aggregator + hard flags; UI build.
-- Hr 4–6: Integrate Signal 1 into pipeline; connect frontend↔backend; seed images.
-- Hr 6–8: End-to-end testing across scenarios; fixes.
-- Hr 8–9: Demo polish and screenshot moment.
-- Hr 9–10: Rehearse 90s demo, record backup.
+| Claim | Product | Role | Expected |
+|-------|---------|------|----------|
+| C001 | SSL 2 (radial metal cracks) | clear fraud | High |
+| C002 | Oxford shirt (doctored from listing) | ambiguous, reference match | Elevated/High |
+| C003 + C004 | backpack (reused image) | image-reuse flag | High |
+| C005 | A4 photo frame (real shattered glass) | false-positive trap | **Low** |
+| C006 | Calcifer tray (real breakage) | legitimate | **Low** |
 
-## Minimal Checklist (first tasks)
+> Note: no demo claim triggers the behavioural logistics override (all demo orders have one claim).
+> Decide before demo — add a logistics scenario, or present the override as a capability.
 
-- [ ] Verify or add OpenAI API key in `.env` (follow `SETUP.md`).
-- [ ] Implement `VisualClaimIntegrity` wrapper (vision call + JSON schema output).
-- [ ] pHash index script using `sharp` + `imghash` and a min-distance checker.
-- [ ] `BehaviouralContext` heuristics implementation and shared-order override.
-- [ ] Aggregator + hard-flag logic + `/api/claim/:id/score` route.
-- [ ] Minimal React verdict card (band badge, per-signal evidence, LLM prose).
+## API contract (locked)
 
-Branching workflow
+- `POST /api/claim/:id/score` → full `ScoredClaim`.
+- `GET /api/claims` → claim summaries for the list view.
+- Strip `_dev` from every response.
 
-- Follow `master` → `staging` → `feature`. Create feature branches from `staging` and open PRs targeting `staging` for review and integration. `staging` is pushed to `origin/staging` and visible to collaborators.
+## Build sequence (staged; commit + review after each)
+
+0 scaffold · 1 types + data layer · 2 deterministic spine (Image Reuse + Behavioural + aggregator,
+`runEval --no-vision`) · 3 vision + narrator (full eval) · 4 API · 5 verdict-card UI · 6 polish + rehearse.
 
 ## Files of interest
 
-- [AGENTS.md](AGENTS.md)
-- [claim-integrity-agent-spec.md](claim-integrity-agent-spec.md)
-- [signal-1-prompt.md](signal-1-prompt.md)
-- [.codex/config.toml](.codex/config.toml)
-- [data/IMAGES_MANIFEST.md](data/IMAGES_MANIFEST.md)
+- `AGENTS.md`, `codex-master-prompt.md`
+- `claim-integrity-agent-spec.md`
+- `signal-1-prompt.md` (clean loadable system prompt) + `signal-1-tuning-notes.md` (schema, mapping, checklist)
+- `data/IMAGES_MANIFEST.md`
+- `.codex/config.toml`
 
 ---
 
-Generated on 2026-06-06. Export file: `EXPORT_SUMMARY.md`.
+Regenerated 2026-06-06. Export file: `EXPORT_SUMMARY.md`.
