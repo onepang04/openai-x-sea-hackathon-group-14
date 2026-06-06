@@ -1,0 +1,62 @@
+[
+  {
+    "id": "P001",
+    "name": "Handmade Ceramic Coffee Mug 350ml",
+    "category": "Home & Living",
+    "material": "ceramic",
+    "typical_failure_modes": [
+      "chips at the rim or handle from knocks",
+      "hairline cracks radiating from a single impact point",
+      "shatters into a few large shards on a hard drop"
+    ],
+    "price_sgd": 24.9
+  },
+  {
+    "id": "P002",
+    "name": "Aurora X20 Smartphone 6.5\"",
+    "category": "Mobile & Gadgets",
+    "material": "glass front, aluminium frame",
+    "typical_failure_modes": [
+      "spiderweb cracks emanating from a clear impact origin (usually a corner or edge)",
+      "single linear crack across the panel",
+      "screen lifts or separates at one corner"
+    ],
+    "price_sgd": 459.0
+  },
+  {
+    "id": "P003",
+    "name": "Everyday Cotton Crewneck Tee",
+    "category": "Fashion",
+    "material": "100% cotton knit",
+    "typical_failure_modes": [
+      "tears along stitched seams",
+      "fraying or pilling at hems and collar",
+      "small holes from snags, with stretched/distorted surrounding fibres"
+    ],
+    "price_sgd": 19.9
+  },
+  {
+    "id": "P004",
+    "name": "SoundPods Pro Wireless Earbuds",
+    "category": "Audio",
+    "material": "ABS plastic case, silicone tips",
+    "typical_failure_modes": [
+      "hinge cracks or snaps at the case lid",
+      "scuffing and stress-whitening on dropped corners",
+      "non-functional charging (not visible damage)"
+    ],
+    "price_sgd": 89.0
+  },
+  {
+    "id": "P005",
+    "name": "Belle Nuit Eau de Parfum 50ml",
+    "category": "Health & Beauty",
+    "material": "glass bottle",
+    "typical_failure_modes": [
+      "shatters into many small sharp fragments",
+      "cracks at the base or neck with leakage",
+      "atomiser pump bent or detached"
+    ],
+    "price_sgd": 78.0
+  }
+]
