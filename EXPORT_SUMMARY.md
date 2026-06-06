@@ -7,9 +7,9 @@ A concise export of architecture, scope, and build sequence. Authoritative build
 
 - Frontend: React + Vite + Tailwind — reviewer UI (claim list, verdict card, action buttons).
 - Backend: Node + TypeScript + Express — signal runner, aggregator, final LLM narration.
-- Models: OpenAI vision for `VisualClaimIntegrity`; SEA-LION (AI Singapore) for the narrator, via its
-  OpenAI-compatible API (`https://api.sea-lion.ai/v1`, `SEA_LION_API_KEY`). Same SDK, two clients;
-  read model names from env. Narrator has a fallback (OpenAI/templated) since the score doesn't depend on it.
+- Models: OpenAI vision for `VisualClaimIntegrity`; OpenAI text for the narrator. One `openai` client,
+  two model ids (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`) on `OPENAI_API_KEY`;
+  read model names from env. Narrator has a templated fallback since the score doesn't depend on it.
 - Data: in-memory JSON in `data/` (`claims.json`, `accounts.json`, `products.json`, `orders.json`),
   images in `data/images/claims/` and `data/images/reference/`, + a pHash index built at startup.
 - Signals (pluggable, all implement `Signal.evaluate(EnrichedClaim)`):
@@ -39,7 +39,7 @@ See `AGENTS.md` and `claim-integrity-agent-spec.md`.
 
 1. Run signals with `Promise.allSettled(...)` — a failed signal is dropped, not fatal.
 2. Aggregate available signals; apply hard flags.
-3. SEA-LION narration (with fallback) → 2–3 sentence explanation + recommended action.
+3. OpenAI narration (with fallback) → 2–3 sentence explanation + recommended action.
 
 ## Demo scenarios (6)
 

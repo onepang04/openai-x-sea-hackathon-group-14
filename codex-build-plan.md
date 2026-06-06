@@ -58,16 +58,14 @@ live in the repo but are NOT needed in Codex's path. Keep AGENTS.md authoritativ
 
 ---
 
-## 2. Two API providers (read once)
+## 2. One API provider (read once)
 
-Same `openai` SDK, two clients:
-- **OpenAI** — the Signal 1 **vision** call. `OPENAI_API_KEY`.
-- **SEA-LION** — the **narrator** (reviewer prose), via its OpenAI-compatible API. Base URL
-  `https://api.sea-lion.ai/v1`, `SEA_LION_API_KEY`, model e.g. `aisingapore/Qwen-SEA-LION-v4-32B-IT`
-  (confirm via `/v1/models` on the day). SEA-LION has no vision model — vision stays on OpenAI.
-- **Wrap the narrator with a fallback** (OpenAI text or a templated string). SEA-LION's free tier has
-  been ~10 req/min, 1 key/user — fine for a 6-claim demo, but a rate-limit/timeout mid-demo would be
-  ugly, and the score doesn't depend on the narrator. Make it swappable.
+One `openai` client, two model ids:
+- **Vision** — the Signal 1 call. `OPENAI_VISION_MODEL`, auth `OPENAI_API_KEY`.
+- **Narrator** — the reviewer prose, a text-only call. `OPENAI_NARRATOR_MODEL` (may be a cheaper text
+  model), same `OPENAI_API_KEY`.
+- **Wrap the narrator with a fallback** (a templated string built from the signal evidence). A
+  rate-limit/timeout mid-demo would be ugly, and the score doesn't depend on the narrator. Make it swappable.
 
 ---
 
@@ -89,7 +87,7 @@ Don't wait for the UI to know if the system works. The eval harness reads `_dev.
 `claims.json` and prints expected vs actual per claim.
 
 ```bash
-npm run eval -- --no-vision   # deterministic spine only (no OpenAI/SEA-LION cost) — built Stage 2
+npm run eval -- --no-vision   # deterministic spine only (no OpenAI cost) — built Stage 2
 npm run eval                  # full pipeline incl. vision + narrator — Stage 3 on
 ```
 
@@ -114,7 +112,7 @@ C006 | Calcifer     | expected Low       | actual Low   11  hard_flag: none     
 |----|----------------------|--------|--------|
 | 0–1 | 0 scaffold + 1 types/data | B | A preps Signal-1 tuning; C sketches UI vs mocked score; D verifies images/JSON load |
 | 1–4 | 2 deterministic spine (+ `eval --no-vision`) | B | **A tunes Signal 1 by hand against the 6 scenarios — the critical path** |
-| 4–6 | 3 vision + SEA-LION narrator (full eval) | B + A | D integrates; C polishes verdict card |
+| 4–6 | 3 vision + OpenAI narrator (full eval) | B + A | D integrates; C polishes verdict card |
 | 6–8 | 4 API + 5 verdict-card UI | C | D leads end-to-end test across all 6 scenarios; A/B fix |
 | 8–9 | 6 polish | D + C | A/B standby, targeted fixes only |
 | 9–10 | rehearse | whole team, D drives | record backup video, buffer |

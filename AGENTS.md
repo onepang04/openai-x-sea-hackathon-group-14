@@ -10,7 +10,7 @@ A refund-claim integrity system for a Shopee-style marketplace. It ingests a ref
 
 ```
 React frontend  ->  Node/TS backend  ->  OpenAI (vision: Signal 1)
-(claim list,        (signal runner,       SEA-LION (narrator:
+(claim list,        (signal runner,       OpenAI (narrator:
  verdict card)       aggregator,           reviewer explanation)
                      LLM narrator)
                           |
@@ -51,12 +51,12 @@ score01 = Σ(weight·risk·confidence) / Σ(weight·confidence)   // available s
 Weights: Visual 1.0, ImageReuse 0.9, Behavioural 0.7.
 Then: `riskScore = round(score01 * 100)`; band = Low(<30) / Elevated(30–65) / High(>65).
 Hard-flag overrides force High. Missing signals drop from both sums.
-A final **SEA-LION** call (AI Singapore's regional model, via its OpenAI-compatible API) turns (score, band, evidences) into the reviewer explanation + recommended action.
+A final **OpenAI** text call turns (score, band, evidences) into the reviewer explanation + recommended action.
 
 ## Tech stack (do not substitute)
 
 - Backend: Node + TypeScript + Express, `openai`, `sharp`, `imghash`.
-- Models: two clients via the `openai` SDK — OpenAI (Signal 1 vision call) and SEA-LION (narrator; base URL `https://api.sea-lion.ai/v1`, separate `SEA_LION_API_KEY`). SEA-LION has no vision model, so the vision call must stay on OpenAI.
+- Models: one OpenAI client via the `openai` SDK — a vision model for the Signal 1 call (`OPENAI_VISION_MODEL`) and a text model for the narrator (`OPENAI_NARRATOR_MODEL`), both authenticated with `OPENAI_API_KEY`.
 - Frontend: React + TypeScript + Tailwind, built with Vite.
 - Data: JSON files in `data/`, loaded into memory at startup.
 
