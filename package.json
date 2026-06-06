@@ -1,0 +1,14 @@
+{
+  "name": "claim-integrity-agent",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "npm --workspace apps/api run dev",
+    "typecheck": "npm --workspace apps/api run typecheck",
+    "eval:signal1": "npm --workspace apps/api run eval:signal1",
+    "eval:pipeline": "npm --workspace apps/api run eval:pipeline"
+  }
+}
