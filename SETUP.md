@@ -23,8 +23,8 @@ git --version
 ### 2. Clone the repo
 
 ```bash
-git clone https://github.com/onepang04/claim-integrity-agent.git
-cd claim-integrity-agent
+git clone https://github.com/onepang04/openai-x-sea-hackathon-group-14.git
+cd openai-x-sea-hackathon-group-14
 ```
 
 ### 3. Install Codex CLI
@@ -98,8 +98,8 @@ git --version
 ### 2. Clone the repo
 
 ```powershell
-git clone https://github.com/onepang04/claim-integrity-agent.git
-cd claim-integrity-agent
+git clone https://github.com/onepang04/openai-x-sea-hackathon-group-14.git
+cd openai-x-sea-hackathon-group-14
 ```
 
 ### 3. Install Codex CLI
