@@ -1,15 +1,15 @@
 [
   {
     "id": "P001",
-    "name": "Ralph Lauren Custom Fit Oxford Shirt",
+    "name": "Long-Sleeve Cotton Shirt",
     "category": "Fashion",
-    "material": "100% cotton oxford cloth with stitched cuffs and seams",
+    "material": "cotton knit or woven fabric with stitched sleeve seams and cuffs",
     "typical_failure_modes": [
-      "tears along stitched seams or stress points",
-      "fraying at cuffs, hems, and collar",
-      "small punctures with pulled or distorted weave"
+      "tears along seams or stress points",
+      "fraying around cuffs and hems",
+      "small punctures with pulled or distorted fabric"
     ],
-    "price_sgd": 189
+    "price_sgd": 35
   },
   {
     "id": "P002",
@@ -27,11 +27,11 @@
     "id": "P003",
     "name": "Torriden Dive-In Skincare Set",
     "category": "Beauty",
-    "material": "plastic cosmetic jars with sealed lids and cardboard retail packaging",
+    "material": "plastic cosmetic jars and tubes with cardboard retail packaging",
     "typical_failure_modes": [
       "cracked plastic jar or lid from compression",
       "leakage from a broken seal",
-      "crushed cardboard packaging"
+      "crushed or torn cardboard packaging"
     ],
     "price_sgd": 58
   },
@@ -49,16 +49,15 @@
   },
   {
     "id": "P005",
-    "name": "Solid State Logic SSL 2 USB Audio Interface",
-    "category": "Audio",
-    "material": "aluminium chassis with plastic control knobs",
+    "name": "Clear Plastic Storage Container",
+    "category": "Home & Living",
+    "material": "transparent polypropylene plastic container with snap-on plastic lid",
     "typical_failure_modes": [
-      "a knob cracks or pulls off the potentiometer shaft",
-      "scuffs, scratches, or dents on the metal faceplate",
-      "bent or damaged rear I/O connectors"
+      "corner cracks or star fractures from impact",
+      "rim or lid-tab breaks from bending or compression",
+      "stress whitening around cracked or flexed plastic"
     ],
-    "price_sgd": 399,
-    "reference_image": "ssl2_intact.jpg"
+    "price_sgd": 12
   },
   {
     "id": "P006",
@@ -98,14 +97,15 @@
   },
   {
     "id": "P009",
-    "name": "Clear Plastic Storage Container",
-    "category": "Home & Living",
-    "material": "transparent polypropylene plastic container with snap-on plastic lid",
+    "name": "Solid State Logic SSL 2 USB Audio Interface",
+    "category": "Audio",
+    "material": "aluminium chassis with plastic control knobs",
     "typical_failure_modes": [
-      "corner cracks or star fractures from impact",
-      "rim or lid-tab breaks from bending or compression",
-      "stress whitening around cracked or flexed plastic"
+      "a knob cracks or pulls off the potentiometer shaft",
+      "scuffs, scratches, or dents on the metal faceplate",
+      "bent or damaged rear I/O connectors"
     ],
-    "price_sgd": 12
+    "price_sgd": 399,
+    "reference_image": "ssl2_intact.jpg"
   }
 ]
