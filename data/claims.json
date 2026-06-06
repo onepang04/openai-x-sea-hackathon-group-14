@@ -1,0 +1,122 @@
+[
+  {
+    "id": "C001",
+    "account_id": "A001",
+    "product_id": "P001",
+    "order_id": "ORD-1001",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Mug arrived with a chip on the rim — must have happened in transit. Photo attached.",
+    "images": ["C001_mug_chip.jpg"],
+    "_dev": {
+      "scenario_role": "clear legitimate",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "plausible chip on ceramic, consistent claim, clean long-standing account"
+    }
+  },
+  {
+    "id": "C002",
+    "account_id": "A002",
+    "product_id": "P002",
+    "order_id": "ORD-1002",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Screen was completely cracked when I opened the box. Want a full refund.",
+    "images": ["C002_phone_fake_crack.jpg"],
+    "_dev": {
+      "scenario_role": "clear fraud",
+      "ground_truth": "fraudulent",
+      "expected_band": "High",
+      "why": "AI-generated impossible crack (radial from centre, no impact origin) + serial-returner account"
+    }
+  },
+  {
+    "id": "C003",
+    "account_id": "A008",
+    "product_id": "P004",
+    "order_id": "ORD-1003",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Earbuds case was cracked on arrival.",
+    "images": ["shared_fake_01.jpg"],
+    "_dev": {
+      "scenario_role": "image reuse (pair 1 of 2)",
+      "ground_truth": "fraudulent",
+      "expected_band": "High",
+      "why": "same image as C004 across a different account — hard-flag image reuse"
+    }
+  },
+  {
+    "id": "C004",
+    "account_id": "A002",
+    "product_id": "P004",
+    "order_id": "ORD-1004",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Got broken earbuds, the case won't close. Please refund.",
+    "images": ["shared_fake_01.jpg"],
+    "_dev": {
+      "scenario_role": "image reuse (pair 2 of 2)",
+      "ground_truth": "fraudulent",
+      "expected_band": "High",
+      "why": "identical image to C003 — perceptual-hash hard flag fires"
+    }
+  },
+  {
+    "id": "C005",
+    "account_id": "A003",
+    "product_id": "P003",
+    "order_id": "ORD-1005",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "There's a tear on the front of the shirt, it came like this.",
+    "images": ["C005_shirt_fake_tear.jpg"],
+    "_dev": {
+      "scenario_role": "ambiguous demo-winner",
+      "ground_truth": "fraudulent",
+      "expected_band": "Elevated-to-High via combination",
+      "why": "AI fake is subtle/plausible-looking on its own (Visual signal borderline), but new-account + early-claim behaviour pushes the combined score up. C2PA STRIPPED so it is not trivially caught."
+    }
+  },
+  {
+    "id": "C006",
+    "account_id": "A004",
+    "product_id": "P005",
+    "order_id": "ORD-1006",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "The perfume bottle shattered inside the package, glass everywhere.",
+    "images": ["C006_glass_real_shatter.jpg"],
+    "_dev": {
+      "scenario_role": "false-positive trap",
+      "ground_truth": "legitimate",
+      "expected_band": "Low-to-Elevated (NOT High)",
+      "why": "real shatter looks dramatic/suspicious, but glass genuinely shatters this way and the account is clean — proves the system is calibrated, not trigger-happy"
+    }
+  },
+  {
+    "id": "C007",
+    "account_id": "A005",
+    "product_id": "P002",
+    "order_id": "ORD-9981",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Phone screen damaged, this is from the big order that all arrived banged up.",
+    "images": ["C007_phone_logistics.jpg"],
+    "_dev": {
+      "scenario_role": "logistics incident (1 of 2 shown of 8)",
+      "ground_truth": "legitimate",
+      "expected_band": "Lowered via context override + logistics tag",
+      "why": "account looks like an abuser (8 claims/30d) but all 8 share ORD-9981 + one delivery date — parcel-level transit damage, route to logistics not fraud"
+    }
+  },
+  {
+    "id": "C008",
+    "account_id": "A005",
+    "product_id": "P001",
+    "order_id": "ORD-9981",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "Mug from the same shipment is cracked too.",
+    "images": ["C008_mug_logistics.jpg"],
+    "_dev": {
+      "scenario_role": "logistics incident (2 of 2 shown of 8)",
+      "ground_truth": "legitimate",
+      "expected_band": "Lowered via context override + logistics tag",
+      "why": "second claim on ORD-9981 — reinforces the logistics-incident narrative"
+    }
+  }
+]

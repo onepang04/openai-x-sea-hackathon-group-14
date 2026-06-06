@@ -1,0 +1,56 @@
+[
+  {
+    "id": "A001",
+    "display_name": "wei_collects",
+    "account_age_days": 740,
+    "total_orders": 41,
+    "total_refunds": 1,
+    "claims_last_30_days": 0,
+    "profile_note": "long-standing clean account"
+  },
+  {
+    "id": "A002",
+    "display_name": "deals_hunter88",
+    "account_age_days": 182,
+    "total_orders": 20,
+    "total_refunds": 12,
+    "claims_last_30_days": 4,
+    "profile_note": "serial returner — high refund rate and velocity"
+  },
+  {
+    "id": "A003",
+    "display_name": "newuser_4471",
+    "account_age_days": 15,
+    "total_orders": 3,
+    "total_refunds": 2,
+    "claims_last_30_days": 2,
+    "profile_note": "new account, early high-value claims"
+  },
+  {
+    "id": "A004",
+    "display_name": "jielin_home",
+    "account_age_days": 365,
+    "total_orders": 28,
+    "total_refunds": 2,
+    "claims_last_30_days": 1,
+    "profile_note": "mostly clean — files the false-positive-trap claim"
+  },
+  {
+    "id": "A005",
+    "display_name": "marcus_bulkbuy",
+    "account_age_days": 520,
+    "total_orders": 60,
+    "total_refunds": 8,
+    "claims_last_30_days": 8,
+    "profile_note": "8 recent claims LOOK like abuse, but all belong to one damaged shipment (ORD-9981) — the logistics-incident case"
+  },
+  {
+    "id": "A008",
+    "display_name": "quickflip_store",
+    "account_age_days": 47,
+    "total_orders": 9,
+    "total_refunds": 6,
+    "claims_last_30_days": 3,
+    "profile_note": "fraud-ring account reusing a damage photo"
+  }
+]
