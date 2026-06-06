@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-label="Cracked earbuds case evidence">
+  <rect width="960" height="720" fill="#0b0b0b"/>
+  <path d="M0 500h960v220H0z" fill="#141414"/>
+  <g transform="translate(230 210)">
+    <rect x="80" y="95" width="340" height="220" rx="76" fill="#eeeeee"/>
+    <path d="M104 178h292" stroke="#b6b6b6" stroke-width="8" stroke-linecap="round"/>
+    <path d="M238 178l-34 34 43 19-58 54" fill="none" stroke="#1b1b1b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M282 178l26 48-38 18 48 53" fill="none" stroke="#1b1b1b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="250" cy="320" rx="160" ry="20" fill="#252525"/>
+  </g>
+  <path d="M118 120h724" stroke="#2a2a2a" stroke-width="2" stroke-dasharray="9 16"/>
+</svg>

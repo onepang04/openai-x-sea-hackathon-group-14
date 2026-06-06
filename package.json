@@ -1,0 +1,15 @@
+{
+  "name": "claim-integrity-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @claim-integrity/web",
+    "build": "npm run build --workspace @claim-integrity/web",
+    "typecheck": "npm run typecheck --workspace @claim-integrity/web",
+    "preview": "npm run preview --workspace @claim-integrity/web"
+  }
+}
