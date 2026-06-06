@@ -12,6 +12,7 @@ export interface Product {
   material: string;
   typical_failure_modes: string[];
   price_sgd: number;
+  reference_image?: string;
 }
 
 export interface Account {
@@ -83,6 +84,6 @@ export interface ScoredClaim {
   band: Band;
   hardFlag: string | null;
   signals: SignalResult[];
-  explanation: string;
-  recommendedAction: string;
+  explanation?: string;
+  recommendedAction?: string;
 }

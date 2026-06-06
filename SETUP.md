@@ -37,7 +37,7 @@ Codex model for ChatGPT sign-in is `gpt-5.5`; the repo includes
 
 ### 4. Configure model/API environment
 
-The app uses OpenAI for Signal 1 vision and SEA-LION for reviewer narration.
+The app uses OpenAI for both Signal 1 vision and reviewer-facing narration.
 Codex auth is separate from these app API keys.
 
 ```bash
@@ -49,8 +49,7 @@ Fill in:
 ```bash
 OPENAI_API_KEY=sk-...
 OPENAI_VISION_MODEL=<verify-current-openai-vision-model>
-SEA_LION_API_KEY=...
-SEA_LION_MODEL=<verify-via-sea-lion-v1-models>
+OPENAI_NARRATOR_MODEL=<text-model-for-narration>
 ```
 
 Do not commit real keys. The backend should read model IDs from env vars, not
@@ -111,8 +110,7 @@ Set app environment variables:
 ```powershell
 $env:OPENAI_API_KEY = "sk-..."
 $env:OPENAI_VISION_MODEL = "<verify-current-openai-vision-model>"
-$env:SEA_LION_API_KEY = "..."
-$env:SEA_LION_MODEL = "<verify-via-sea-lion-v1-models>"
+$env:OPENAI_NARRATOR_MODEL = "<text-model-for-narration>"
 ```
 
 Set them permanently if this will be the demo machine:
@@ -120,8 +118,7 @@ Set them permanently if this will be the demo machine:
 ```powershell
 [System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-...", "User")
 [System.Environment]::SetEnvironmentVariable("OPENAI_VISION_MODEL", "<verify-current-openai-vision-model>", "User")
-[System.Environment]::SetEnvironmentVariable("SEA_LION_API_KEY", "...", "User")
-[System.Environment]::SetEnvironmentVariable("SEA_LION_MODEL", "<verify-via-sea-lion-v1-models>", "User")
+[System.Environment]::SetEnvironmentVariable("OPENAI_NARRATOR_MODEL", "<text-model-for-narration>", "User")
 ```
 
 ## Data assets
@@ -133,22 +130,22 @@ The JSON files are committed under `data/`:
 - `data/orders.json`
 - `data/products.json`
 
-Drop the image files before the demo:
+Drop the image files before the demo, if they are not already committed:
 
 Claim images in `data/images/claims/`:
 
+- `shirt_seam_tear.jpg`
+- `visor_scratched.jpg`
+- `skincare_jar_cracked.jpg`
+- `mug_cracked.jpg`
+- `glass_frame_shattered.jpg`
+- `usb_hub_broken.jpg`
+- `monitor_cracked.jpg`
 - `ssl2_broken.jpg`
-- `shirt_torn.jpg`
-- `backpack_torn.jpg`
-- `frame_shattered.jpg`
-- `calcifer_broken.jpg`
 
 Reference images in `data/images/reference/`:
 
 - `ssl2_intact.jpg`
-- `shirt_intact.jpg`
-- `backpack_intact.jpg`
-- `calcifer_intact.jpg`
 
 See `data/IMAGES_MANIFEST.md` for the scenario roles and exact matching rules.
 
@@ -157,6 +154,6 @@ See `data/IMAGES_MANIFEST.md` for the scenario roles and exact matching rules.
 Use the staged sequence in `codex-master-prompt.md` and commit after each stage:
 
 0 scaffold -> 1 types/data -> 2 deterministic spine -> 3 vision/narrator ->
-4 API -> 5 UI -> 6 polish.
+4 API -> 5 reviewer login + UI -> 6 polish.
 
 `codex-build-plan.md` has the operator runbook and eval rhythm.

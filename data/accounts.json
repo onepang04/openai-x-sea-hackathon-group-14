@@ -1,47 +1,146 @@
 [
   {
     "id": "A001",
-    "display_name": "jielin_home",
-    "account_age_days": 365,
-    "total_orders": 28,
-    "total_refunds": 2,
-    "claims_last_30_days": 1,
-    "profile_note": "mostly clean — files the photo-frame false-positive-trap claim"
-  },
-  {
-    "id": "A002",
-    "display_name": "deals_hunter88",
-    "account_age_days": 182,
-    "total_orders": 20,
-    "total_refunds": 12,
-    "claims_last_30_days": 4,
-    "profile_note": "serial returner — high refund rate and velocity"
+    "display_name": "sleeve_claim_01",
+    "account_age_days": 18,
+    "total_orders": 4,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "new account with high recent claim velocity"
   },
   {
     "id": "A003",
-    "display_name": "newuser_4471",
-    "account_age_days": 15,
-    "total_orders": 3,
-    "total_refunds": 2,
-    "claims_last_30_days": 2,
-    "profile_note": "new account, early high-value claims"
+    "display_name": "visor_return_91",
+    "account_age_days": 22,
+    "total_orders": 5,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "new account with multiple recent claims"
   },
   {
-    "id": "A008",
-    "display_name": "quickflip_store",
-    "account_age_days": 47,
+    "id": "A004",
+    "display_name": "helmetparts_sg",
+    "account_age_days": 310,
+    "total_orders": 24,
+    "total_refunds": 2,
+    "claims_last_30_days": 1,
+    "profile_note": "clean established buyer"
+  },
+  {
+    "id": "A005",
+    "display_name": "skincare_rush_a",
+    "account_age_days": 35,
+    "total_orders": 8,
+    "total_refunds": 5,
+    "claims_last_30_days": 3,
+    "profile_note": "risky account with high refund rate; recycled damage photo also filed by A012"
+  },
+  {
+    "id": "A006",
+    "display_name": "skincare_rush_b",
+    "account_age_days": 42,
     "total_orders": 9,
     "total_refunds": 6,
-    "claims_last_30_days": 3,
-    "profile_note": "fraud-ring account reusing a damage photo"
+    "claims_last_30_days": 4,
+    "profile_note": "risky account with repeated skincare damage claims"
+  },
+  {
+    "id": "A007",
+    "display_name": "beauty_bundle_buyer",
+    "account_age_days": 520,
+    "total_orders": 48,
+    "total_refunds": 3,
+    "claims_last_30_days": 1,
+    "profile_note": "clean buyer reporting packaging quality issue"
   },
   {
     "id": "A009",
-    "display_name": "ahmad_collects",
-    "account_age_days": 600,
-    "total_orders": 50,
-    "total_refunds": 3,
+    "display_name": "custom_mug_buyer",
+    "account_age_days": 270,
+    "total_orders": 31,
+    "total_refunds": 2,
     "claims_last_30_days": 1,
-    "profile_note": "clean long-standing collector — second legitimate case"
+    "profile_note": "clean buyer with print-quality complaint"
+  },
+  {
+    "id": "A010",
+    "display_name": "storage_box_case_a",
+    "account_age_days": 24,
+    "total_orders": 5,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "files three claims in one window — but all on a single shipment (logistics cluster), so the override should lower risk"
+  },
+  {
+    "id": "A011",
+    "display_name": "audio_flip_88",
+    "account_age_days": 21,
+    "total_orders": 5,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "new account filing a high-value audio interface damage claim"
+  },
+  {
+    "id": "A012",
+    "display_name": "skincare_reuse_b",
+    "account_age_days": 17,
+    "total_orders": 4,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "second account submitting a recycled skincare damage photo also used by A005"
+  },
+  {
+    "id": "A013",
+    "display_name": "frame_claims_fast",
+    "account_age_days": 16,
+    "total_orders": 3,
+    "total_refunds": 2,
+    "claims_last_30_days": 3,
+    "profile_note": "new account with high claim velocity"
+  },
+  {
+    "id": "A014",
+    "display_name": "fragile_frame_buyer",
+    "account_age_days": 610,
+    "total_orders": 51,
+    "total_refunds": 4,
+    "claims_last_30_days": 1,
+    "profile_note": "clean buyer reporting plausible fragile-item damage"
+  },
+  {
+    "id": "A015",
+    "display_name": "usbclaim_772",
+    "account_age_days": 28,
+    "total_orders": 5,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "new account with repeated electronics claims"
+  },
+  {
+    "id": "A016",
+    "display_name": "hub_buyer_sg",
+    "account_age_days": 340,
+    "total_orders": 27,
+    "total_refunds": 2,
+    "claims_last_30_days": 1,
+    "profile_note": "clean buyer with broken connector claim"
+  },
+  {
+    "id": "A017",
+    "display_name": "monitor_returner_a",
+    "account_age_days": 21,
+    "total_orders": 5,
+    "total_refunds": 3,
+    "claims_last_30_days": 3,
+    "profile_note": "new account with high-value electronics claim"
+  },
+  {
+    "id": "A018",
+    "display_name": "monitor_returner_b",
+    "account_age_days": 26,
+    "total_orders": 6,
+    "total_refunds": 4,
+    "claims_last_30_days": 3,
+    "profile_note": "risky account submitting two monitor evidence photos"
   }
 ]

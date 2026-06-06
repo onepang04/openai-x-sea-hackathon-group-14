@@ -11,11 +11,12 @@
 
 ## TL;DR
 
-A vision-language reasoning agent that triages Shopee-style refund claims for integrity, with
-physical-plausibility reasoning as its core differentiator. Output is a **0–100 Risk Score** plus a
-band (Low / Elevated / High) mapped to actions, with a plain-language explanation, surfaced to a
-human reviewer — not an auto-reject. Designed to counter the rising scam of AI-generated fake damage
-photos by reasoning about the *whole claim*, not just pixel forensics.
+A Shopee internal reviewer claim-integrity dashboard for Shopee-style refund claims, with
+physical-plausibility reasoning as its core differentiator. A Shopee reviewer logs in, sees buyer
+refund claims, and gets a **0–100 Risk Score** plus a band (Low / Elevated / High), per-signal
+evidence, and a plain-language explanation. It is advisory triage for the reviewer, not an
+auto-reject. Designed to counter the rising scam of AI-generated fake damage photos by reasoning
+about the *whole claim*, not just pixel forensics.
 
 ---
 
@@ -38,8 +39,9 @@ the AI-photo-fraud vector, as a transparent layer at the front of the existing p
 
 ## What We're Building / NOT Building
 
-**Building:** a claim-integrity agent that ingests a refund claim and produces a Risk Score + band +
-explanation. Three signals combine via a reliability-weighted score with hard-flag overrides.
+**Building:** a Shopee internal reviewer dashboard backed by a claim-integrity agent. The reviewer
+sees webhook-fed refund claims and uses a Risk Score + band + explanation to verify each claim. Three
+signals combine via a reliability-weighted score with hard-flag overrides.
 
 **Core bet:** physical-plausibility reasoning. A VLM that understands real glass shatters violently
 but coherently, real metal dents and scuffs rather than fracturing radially, real cotton tears along
@@ -52,9 +54,9 @@ Remove the model and you have a form.
 - ❌ A bespoke AI-image detector (arms race; 10h can't train one).
 - ❌ EXIF / metadata / C2PA-provenance signal (stripped in the real world; no story value).
 - ❌ Auto-deny logic (false positives punish real customers; this is triage).
-- ❌ A real database, auth, or deployment infra (in-memory JSON, localhost demo).
-- ❌ A buyer/seller-facing UI (one reviewer-facing screen).
-- ❌ Real Shopee integration (standalone demo).
+- ❌ A real database, production auth, or deployment infra (in-memory JSON, localhost demo).
+- ❌ A buyer-facing UI or manual claim input form.
+- ❌ Real Shopee integration. The product story assumes Shopee webhook/database intake; demo JSON stands in for it.
 
 ---
 
@@ -103,11 +105,10 @@ Over `accounts.json` / `orders.json`:
 - **Logistics-incident override:** if `order.total_claims_against_order >= 3`, treat the cluster as a
   transit incident and pull risk down to `min(risk, 0.2)`. Confidence 0.7. Evidence lists which rules fired.
 
-> ⚠️ **Logistics-override demo gap (decide before the demo).** The final 6-scenario set does NOT
-> contain a claim that triggers this override (all demo orders have one claim each). The capability is
-> implemented and it's the headline example in the Q1 application answer — so either (a) add a 7th
-> logistics scenario with two real transit-damage photos sharing one order id, or (b) present the
-> override as an implemented capability and, if a judge asks, trigger it live on a constructed claim.
+> ✅ **Logistics-override demo coverage.** The canonical active set triggers this override: claims
+> C010/C011/C012 (plastic containers) all share order ORD-2010 against account A010, whose
+> `claims_last_30_days: 3` would otherwise read risky — so the override pulls the cluster to Low. This
+> is the headline example from the Q1 answer, now demoable live.
 
 ---
 
@@ -124,14 +125,14 @@ score to at least 75 (into High).
 
 | Score | Band | Default action |
 |-------|------|----------------|
-| < 30  | **Low** | Release for standard processing (human spot-check) |
-| 30–65 | **Elevated** | Route to a human reviewer with the explanation card |
+| < 30  | **Low** | Release for standard processing (reviewer spot-check) |
+| 30–65 | **Elevated** | Route to reviewer follow-up with the explanation card |
 | > 65  | **High** | Escalate / require additional evidence / fraud review |
 
 - **Whole numbers only** — no false precision; you have no labelled data.
 - **Label it "Risk Score," not "Fraud Probability."** It's a triage ordinal, not a calibrated probability.
 
-**Final call (SEA-LION)** turns (score, band, signal evidences) into a 2–3 sentence reviewer explanation +
+**Final call (OpenAI)** turns (score, band, signal evidences) into a 2–3 sentence reviewer-facing explanation +
 recommended action. The math owns the number; the model owns the prose; it must only cite signals that
 actually fired and never invent facts.
 
@@ -141,53 +142,56 @@ actually fired and never invent facts.
 
 ```
 React + Vite + Tailwind  ->  Node + TS + Express  ->  OpenAI  (vision: Signal 1)
-(claim list, verdict card)   (signal runner,            SEA-LION (narrator) via
-                              aggregator, narrator)      OpenAI-compatible API
+(reviewer login, internal   (demo login, signal        OpenAI   (narrator) text
+ dashboard, verdict card)    runner, aggregator,        call, same SDK
+                              narrator)
                                                          in-memory JSON: data/*.json + pHash index
 ```
 
-- **Models:** OpenAI for the Signal 1 vision call; SEA-LION (AI Singapore) for the narrator, via its
-  OpenAI-compatible API (`https://api.sea-lion.ai/v1`, `SEA_LION_API_KEY`, model e.g.
-  `aisingapore/Qwen-SEA-LION-v4-32B-IT`). Same `openai` SDK, two clients. SEA-LION has no vision model,
-  so vision must stay on OpenAI. Wrap the narrator with a fallback (OpenAI text or templated) — it's
-  the flakiest call and the score doesn't depend on it.
+- **Models:** OpenAI for the Signal 1 vision call; OpenAI text for the narrator. One `openai` client,
+  two model ids read from env (`OPENAI_VISION_MODEL` / `OPENAI_NARRATOR_MODEL`, auth `OPENAI_API_KEY`).
+  Wrap the narrator with a templated fallback — it's the flakiest call and the score doesn't depend on it.
 
 - **Data:** `data/products.json`, `data/accounts.json`, `data/orders.json`, `data/claims.json`;
-  images in `data/images/claims/` and `data/images/reference/`. No DB.
-- **API contract (locked):** `POST /api/claim/:id/score` → full `ScoredClaim`; `GET /api/claims` →
-  summaries for the list. Strip `_dev` from every response.
+  images in `data/images/claims/` and `data/images/reference/`. No DB. These records represent
+  refund claims delivered by Shopee/platform data, not reviewer-entered form input.
+- **API contract (locked):** `POST /api/reviewer/login` → demo reviewer session; `POST /api/claim/:id/score`
+  → full `ScoredClaim`; `GET /api/claims` → summaries for the internal reviewer dashboard. Strip `_dev` from every response.
 - **Build tool:** Vite; OpenAI Codex for scaffolding and bulk implementation.
 
 ---
 
-## Final Demo Scenarios (6)
+## Active Demo Dataset
 
-| Claim | Product | Type | Role | Expected band |
-|-------|---------|------|------|---------------|
-| C001 | SSL 2 audio interface | AI-doctored | clear fraud — radial cracks impossible in metal | High |
-| C002 | Oxford shirt | AI-doctored from listing | ambiguous — believable tear, caught by reference match | Elevated / High |
-| C003 + C004 | leather backpack | reused image, two accounts | image-reuse hard flag | High |
-| C005 | A4 photo frame | **real** shattered glass | false-positive trap — dramatic but genuine | **Low** |
-| C006 | Calcifer resin tray | **real** breakage | legitimate; real photo doesn't match listing | **Low** |
+The locked source of truth is `data/CANONICAL_DATASET.md`: 18 active claims, with stable IDs and two
+ambiguous claims removed from the active demo/eval surface.
 
-Accounts: A001 (clean, files C005), A002 (serial returner), A003 (new account), A008 (reuse-ring),
-A009 (clean collector, files C006). Image filenames per `data/IMAGES_MANIFEST.md`.
+| Claims | Product/theme | Role | Expected band |
+|--------|---------------|------|---------------|
+| C001, C003, C006, C013, C015, C017, C018 | plausible damage on risky accounts | behaviour-only frauds | Elevated |
+| C004, C007, C009, C014, C016 | plausible real damage or fulfilment issues | false-positive anchors | Low |
+| C005 + C020 | skincare | image-reuse hard flag | High |
+| C010/C011/C012 | plastic containers | logistics cluster override | Low |
+| C019 | SSL 2 audio interface | doctored-from-listing hard flag | High |
+
+Image filenames per `data/IMAGES_MANIFEST.md` — neutral names; ground truth lives only in `_dev`.
 
 ---
 
 ## Demo Narrative (90 seconds)
 
-1. (10s) **Hook:** "AI is being used to attack the refund system — buyers submit AI-generated photos
+1. (10s) **Hook/login:** Shopee reviewer logs in and lands on the dashboard. "AI is being used to attack the refund system — buyers submit AI-generated photos
    of damage that doesn't exist. We use AI to defend it."
-2. (20s) **Clear fraud (C001):** the SSL 2 with cracks fanning across the metal faceplate. High band;
-   the reasoning quotes the physics — metal dents and scuffs, it doesn't fracture radially.
-3. (20s) **Image reuse (C003/C004):** the same backpack photo across two accounts. Hard flag fires.
-4. (25s) **Ambiguous (C002):** a believable shirt tear. Visual integrity is borderline, but the image
-   matches the listing photo it was edited from → reference match pushes it up. One-paragraph rationale.
-5. (15s) **False-positive trap (C005):** real shattered glass — looks alarming, lands **Low**.
-   "Calibrated, not trigger-happy." (Optionally C006 to reinforce: real damage doesn't match the listing.)
+2. (20s) **Clear fraud (C019):** the SSL 2 image matches the product reference and may show impossible
+   metal cracking. High band; the reasoning explains why this needs reviewer follow-up.
+3. (20s) **Image reuse (C005/C020):** the same skincare-jar photo across two accounts. Hard flag fires.
+4. (20s) **Logistics override (C010/C011/C012):** an account with three recent claims looks like a
+   serial returner — but all three share one order and delivery date. The override reads it as a transit
+   incident and pulls the cluster to Low. "Route to logistics, not fraud."
+5. (15s) **False-positive trap (C014):** shattered glass can be genuinely real — looks alarming, lands
+   **Low**. "Calibrated, not trigger-happy."
 
-Takeaway slide: "What takes ~3 days to investigate, our agent triages in ~5 seconds — for a human to confirm."
+Takeaway slide: "What takes ~3 days to investigate, our agent triages in ~5 seconds — for a Shopee reviewer to verify."
 
 ---
 
@@ -198,17 +202,17 @@ Four people should buy **depth and polish, not more features.** Resist a fourth 
 | Person | Owns |
 |--------|------|
 | **A — Prompt / Integration** | Signal 1 prompt + schema + tuning (highest-value, least-delegable), then floating integrator once the prompt locks. |
-| **B — Backend** | Scaffold first (unblocks everyone), then Signals 2 & 3, aggregator, narrator, API. De-risked by the master prompt's staged build. |
-| **C — Frontend** | React claim list + verdict card + action buttons. Design taste. |
+| **B — Backend** | Scaffold first (unblocks everyone), then demo login, Signals 2 & 3, aggregator, narrator, API. De-risked by the master prompt's staged build. |
+| **C — Frontend** | Reviewer login, internal claim dashboard, verdict card, and action buttons. Design taste. |
 | **D — PM / Demo** | Images + data integration, demo order + narrative, pitch deck, cross-stream QA, demo delivery. A real job, not overhead. |
 
-Sequencing: B scaffolds hr 0–1; A tunes Signal 1 hr 1–4 on the 6 scenarios; C builds against the locked
+Sequencing: B scaffolds hr 0-1; A tunes Signal 1 hr 1-4 on the 9 scenarios; C builds against the locked
 API shape; D wires images/data and drives integration from hr 4. **Lock the API contract hour 1.**
 **No unverified Codex output to main.** **Rehearse on the demo machine.**
 
 **Cut list if behind at hr 6:** first the behavioural override (keep the simple heuristic), then mock
-the image-reuse hard flag for C003/C004. **Never cut:** Signal 1, the verdict card, the C005/C006
-false-positive trap, the rehearsal.
+the image-reuse hard flag for C005/C020. **Never cut:** Signal 1, the verdict card, the false-positive
+anchors, the C019 hard-flag hero case, and the rehearsal.
 
 ---
 
@@ -220,7 +224,7 @@ false-positive trap, the rehearsal.
 - **Adversarial drift.** Frame as raising the cost of attack, not eliminating fraud.
 - **False positives have real cost** → human-in-the-loop, never auto-deny.
 - **Incumbent shadow.** Sea/Shopee likely has internal fraud ML. Our novelty is the physical-plausibility
-  *reasoning* + *explainability for reviewers* and the cross-platform reuse view — not "AI does fraud."
+  *reasoning* + *reviewer-facing explainability* and the cross-platform reuse view — not "AI does fraud."
 
 ---
 
@@ -292,10 +296,10 @@ gap (existing dropship tools target US/EU patterns, not SEA pricing).*
 
 ## Open Questions
 
-- **Model strings:** verify the current OpenAI vision model AND the SEA-LION narrator model at the
-  venue (query SEA-LION's `/v1/models`); read both from env vars, don't hardcode guesses.
-- **SEA-LION rate limit:** confirm your tier's limit (free tier has been ~10 req/min, 1 key per user)
-  and make sure it won't bite during repeated eval runs or the live demo; the narrator fallback covers it.
+- **Model strings:** verify the current OpenAI vision model AND the OpenAI narrator (text) model at the
+  venue; read both from env vars, don't hardcode guesses.
+- **OpenAI rate limit:** confirm your tier's request/token limits won't bite during repeated eval runs
+  or the live demo; the narrator's templated fallback covers a transient failure.
 - **Logistics override demo:** add a 7th scenario, or present it as a capability? (See the gap note above.)
 - **Image format:** confirm all images are JPG (~1024px) and filenames match the JSON exactly.
 - **Pitch video:** recording a 90-second backup, or live-demo only? (Affects hour 8–9 budget.)

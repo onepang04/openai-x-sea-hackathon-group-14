@@ -1,43 +1,47 @@
-# Image Manifest — Claim-Integrity Agent (FINAL scenario set)
+# Image Manifest — Claim-Integrity Agent (realistic 18-claim active set)
 
-Place these files in the repo, filenames matching `claims.json` / `products.json` **exactly**
-(case-sensitive). 9 files total: 5 claim images + 4 reference images.
+Filenames must match `claims.json` / `products.json` **exactly** (case-sensitive). Ground truth lives
+only in `_dev`, never in a filename. 18 active claim images (C018 has two) + 1 reference image.
 
 - Claim images → `data/images/claims/`
 - Reference (pristine listing) images → `data/images/reference/`
 
 ## Claim images — `data/images/claims/`
 
-| Filename | Claim | Real or fake | What it shows | Role |
-|----------|-------|--------------|---------------|------|
-| `ssl2_broken.jpg` | C001 | AI-doctored | SSL 2 interface with radial cracks fanning across the metal faceplate around a snapped knob | Clear fraud — metal doesn't fracture radially; doctored from `ssl2_intact.jpg` |
-| `shirt_torn.jpg` | C002 | AI-doctored | Oxford shirt with a believable tear | Ambiguous — the tear looks plausible, so the reference match is the decisive catch |
-| `backpack_torn.jpg` | C003 **and** C004 | AI-doctored | Backpack lining tear | The image-reuse pair — **one file, used by two claims/accounts.** Do not make two versions |
-| `frame_shattered.jpg` | C005 | **Real** | Genuinely shattered photo-frame glass | False-positive trap — looks dramatic but is real; must land **Low** |
-| `calcifer_broken.jpg` | C006 | **Real** | Genuinely broken resin storage tray (pieces, box visible) | Legitimate — real breakage; must land **Low** |
+| Filename | Claim | Real/fake | Role |
+|----------|-------|-----------|------|
+| `shirt_black_sleeve_rip.jpg` | C001 | fake | behaviour-only suspicious sleeve rip |
+| `visor_lens_scratch.jpg` | C003 | fake | behaviour-only suspicious visor scratch |
+| `visor_scratched_wrong_color.jpg` | C004 | real | legit visor scratch + colour mismatch |
+| `skincare_jar_cracked_closeup.jpg` | **C005 + C020** | fake | **image-reuse pair** — one file, two accounts |
+| `skincare_boxes_cracked.jpg` | C006 | fake | behaviour-only suspicious skincare claim |
+| `skincare_packaging_damaged.jpg` | C007 | real | legit skincare packaging damage |
+| `mug_print_smudged.jpg` | C009 | real | legit mug print-quality complaint |
+| `plastic_container_side_crack.jpg` | C010 | real | **logistics cluster** (1/3, ORD-2010) |
+| `plastic_container_lid_crack_closeup.jpg` | C011 | real | **logistics cluster** (2/3, ORD-2010) |
+| `plastic_container_lid_crack_blurry.jpg` | C012 | real | **logistics cluster** (3/3, ORD-2010) |
+| `glass_frame_shattered_handheld.jpg` | C013 | fake | behaviour-only suspicious glass-frame claim |
+| `glass_frame_shattered_packaging.jpg` | C014 | real | legit glass-frame transit damage |
+| `usb_hub_port_cracked.jpg` | C015 | fake | behaviour-only suspicious USB hub claim |
+| `usb_hub_connector_broken.jpg` | C016 | real | legit USB connector break |
+| `monitor_packaging_cracked.jpg` | C017 | fake | behaviour-only suspicious monitor claim |
+| `monitor_office_cracked.jpg`, `monitor_desktop_cracked.jpg` | C018 | fake | behaviour-only two-image monitor claim |
+| `ssl2_broken.jpg` | C019 | fake | **doctored-from-listing** (edited from `ssl2_intact.jpg`) + implausible metal cracks |
 
 ## Reference images — `data/images/reference/`
 
 | Filename | Product | What it shows |
 |----------|---------|---------------|
-| `ssl2_intact.jpg` | P001 | Pristine SSL 2 (the source the C001 fake was doctored from) |
-| `shirt_intact.jpg` | P002 | Pristine shirt listing (source of the C002 fake) |
-| `backpack_intact.jpg` | P003 | Pristine backpack (source of the reuse fake) |
-| `calcifer_intact.jpg` | P005 | Pristine Calcifer listing — should **not** match the real broken photo; that's the point |
+| `ssl2_intact.jpg` | P009 (SSL 2) | Pristine listing photo — the source the C019 fake was doctored from |
 
-P004 (photo frame) has **no** reference image — the real damage has no doctored source, which is
-exactly why the reference signal correctly leaves C005 alone.
+P001–P008 have **no** reference image (their claims are genuine photos or behaviour/reuse cases, not doctored-from-listing).
 
-## How the signals are meant to fire on this set
-- **C001 / C002 / C003-4** were each made by editing the intact reference, so a perceptual-hash
-  comparison of claim-vs-reference is the intended catch. C003/C004 reuse the *identical* file across
-  two accounts → distance ~0 → hard flag. C001/C002 are doctored-from-reference → small but non-zero
-  distance; tune the threshold (`DUP_DISTANCE` 5 / `NEAR_DISTANCE` 8) against your real files.
-- **C005 / C006** are genuine separate photos → large distance to everything → no reuse flag → they
-  rely on the visual signal rating the damage *plausible* and a clean account → **Low**.
+## How the signals fire on this set
+- **Signal 1 (visual):** stays calm on the real-damage legits (false-positive anchors); C019 is the active physical-implausibility showcase. Most fraud photos are physically plausible — that's intentional; their conviction comes from Signals 2/3.
+- **Signal 2 (pHash):** C005 ↔ C020 share one file → reuse hard flag. C019 (`ssl2_broken.jpg`) is a near-duplicate of `ssl2_intact.jpg` → doctored-from-listing hard flag.
+- **Signal 3 (behavioural):** risky accounts raise the behaviour-only frauds to Elevated; the ORD-2010 cluster (3 claims, one shipment) triggers the logistics override → Low.
 
 ## Rules of thumb
-- Keep format/resolution consistent (all JPG, ~1024px) so the pipeline behaves uniformly.
-- Compute pHashes from these files **at startup** — never hardcode hashes.
-- No metadata/EXIF/C2PA tricks: provenance detection is explicitly out of scope (see `AGENTS.md`).
-- Don't "teach to the test" — the fakes should be genuinely hard, not conveniently easy for your prompt.
+- Keep format/resolution reasonable; compute pHashes from these files at startup, never hardcode.
+- No metadata/EXIF/C2PA tricks — provenance detection is out of scope (see `AGENTS.md`).
+- Ground truth lives only in `_dev`; never encode real/fake in a filename.
