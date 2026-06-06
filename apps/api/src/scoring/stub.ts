@@ -1,4 +1,5 @@
 import type { Band, Claim, EnrichedClaim, ScoredClaim, SignalResult } from "../types";
+import { scoreVisualClaimIntegrity } from "../signals/visualClaimIntegrity";
 
 const SIGNAL_WEIGHTS: Record<string, number> = {
   VisualClaimIntegrity: 1,
@@ -6,12 +7,20 @@ const SIGNAL_WEIGHTS: Record<string, number> = {
   BehaviouralContext: 0.7,
 };
 
-export function scoreClaimStub(enrichedClaim: EnrichedClaim, allClaims: Claim[]): ScoredClaim {
-  const signals = [
-    scoreVisualPlaceholder(enrichedClaim),
-    scoreImageReusePlaceholder(enrichedClaim, allClaims),
-    scoreBehaviouralPlaceholder(enrichedClaim),
-  ];
+export async function scoreClaimStub(
+  enrichedClaim: EnrichedClaim,
+  allClaims: Claim[],
+): Promise<ScoredClaim> {
+  // Run signals independently; a signal that throws (e.g. the vision call fails) is dropped,
+  // not fatal — the aggregator scores over whatever succeeded (see AGENTS.md).
+  const settled = await Promise.allSettled([
+    scoreVisualClaimIntegrity(enrichedClaim),
+    Promise.resolve(scoreImageReusePlaceholder(enrichedClaim, allClaims)),
+    Promise.resolve(scoreBehaviouralPlaceholder(enrichedClaim)),
+  ]);
+  const signals = settled
+    .filter((r): r is PromiseFulfilledResult<SignalResult> => r.status === "fulfilled")
+    .map((r) => r.value);
   const hardFlag = getHardFlag(signals);
   const weightedScore = getWeightedScore(signals);
   const riskScore = hardFlag ? Math.max(75, weightedScore) : weightedScore;
@@ -25,67 +34,6 @@ export function scoreClaimStub(enrichedClaim: EnrichedClaim, allClaims: Claim[])
     signals,
     explanation: buildExplanation(enrichedClaim, signals, band, hardFlag),
     recommendedAction: getRecommendedAction(band, hardFlag),
-  };
-}
-
-function scoreVisualPlaceholder({ claim, product }: EnrichedClaim): SignalResult {
-  const claimText = claim.claim_text.toLowerCase();
-  const material = product.material.toLowerCase();
-
-  if (material.includes("aluminium") && /crack|fractur|shatter/.test(claimText)) {
-    return {
-      name: "VisualClaimIntegrity",
-      risk: 0.88,
-      confidence: 0.82,
-      evidence:
-        "Placeholder visual rule: claim text describes cracking across an aluminium chassis, which is physically suspicious for this material.",
-      raw: {
-        physicalPlausibility: "implausible",
-        plausibilityReasoning:
-          "Aluminium housings usually dent, bend, or scuff before forming glass-like radial cracks.",
-        contradictions: ["Claimed crack pattern conflicts with the product material."],
-        alternativeExplanations: ["A detached knob or connector damage could still be plausible transit damage."],
-        textImageMatch: true,
-        mismatches: [],
-        hardFlagTrigger: "placeholder: aluminium crack/fracture wording",
-      },
-    };
-  }
-
-  if (claimText.includes("bottom") && claim.images.some((image) => image.includes("mug"))) {
-    return {
-      name: "VisualClaimIntegrity",
-      risk: 0.72,
-      confidence: 0.76,
-      evidence:
-        "Placeholder visual rule: the claim describes bottom damage, while the available mug evidence should be checked for text-image alignment.",
-      raw: {
-        physicalPlausibility: "uncertain",
-        plausibilityReasoning:
-          "Ceramic cracking is plausible, but the described damage location needs review against the submitted image.",
-        contradictions: ["Damage location in claim text may not match the visible evidence."],
-        alternativeExplanations: ["The photo may not show every side of the product."],
-        textImageMatch: false,
-        mismatches: ["Claim says bottom damage; evidence filename indicates a general mug crack view."],
-      },
-    };
-  }
-
-  return {
-    name: "VisualClaimIntegrity",
-    risk: 0.18,
-    confidence: 0.62,
-    evidence:
-      "Placeholder visual rule: product material and claim text describe a plausible damage mode; real vision scoring will replace this.",
-    raw: {
-      physicalPlausibility: "plausible",
-      plausibilityReasoning:
-        "The reported damage falls within the product's listed typical failure modes or common transit damage patterns.",
-      contradictions: [],
-      alternativeExplanations: ["Transit handling or packaging compression could explain the reported damage."],
-      textImageMatch: true,
-      mismatches: [],
-    },
   };
 }
 
@@ -195,8 +143,8 @@ function getHardFlag(signals: SignalResult[]): string | null {
   }
 
   const visual = signals.find((signal) => signal.name === "VisualClaimIntegrity");
-  if (isRecord(visual?.raw) && visual.raw.physicalPlausibility === "implausible" && visual.confidence >= 0.75) {
-    return "VisualClaimIntegrity: physical implausibility placeholder";
+  if (isRecord(visual?.raw) && typeof visual.raw.hardFlagTrigger === "string") {
+    return "VisualClaimIntegrity: implausible physical damage with high confidence";
   }
 
   return null;

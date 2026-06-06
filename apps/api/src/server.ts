@@ -1,8 +1,13 @@
+import { config as loadEnv } from "dotenv";
 import cors from "cors";
 import express from "express";
 import { join } from "path";
 import { DATA_DIR, claims, getEnrichedClaim, sanitizeClaim, toPublicEnrichedClaim } from "./data/load";
 import { scoreClaimStub } from "./scoring/stub";
+
+// The workspace runs with cwd apps/api, so load the repo-root .env explicitly
+// (OPENAI_API_KEY + OPENAI_VISION_MODEL for the Signal 1 vision call).
+loadEnv({ path: join(DATA_DIR, "..", ".env") });
 
 const app = express();
 
@@ -24,10 +29,10 @@ app.get("/api/claims/:id", (req, res) => {
   }
 });
 
-function scoreClaim(req: express.Request, res: express.Response) {
+async function scoreClaim(req: express.Request, res: express.Response) {
   try {
     const enrichedClaim = getEnrichedClaim(req.params.id);
-    res.json(scoreClaimStub(enrichedClaim, claims));
+    res.json(await scoreClaimStub(enrichedClaim, claims));
   } catch (error) {
     res.status(404).json({ error: (error as Error).message });
   }
