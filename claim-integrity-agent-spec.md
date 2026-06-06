@@ -103,11 +103,10 @@ Over `accounts.json` / `orders.json`:
 - **Logistics-incident override:** if `order.total_claims_against_order >= 3`, treat the cluster as a
   transit incident and pull risk down to `min(risk, 0.2)`. Confidence 0.7. Evidence lists which rules fired.
 
-> ⚠️ **Logistics-override demo gap (decide before the demo).** The final 6-scenario set does NOT
-> contain a claim that triggers this override (all demo orders have one claim each). The capability is
-> implemented and it's the headline example in the Q1 application answer — so either (a) add a 7th
-> logistics scenario with two real transit-damage photos sharing one order id, or (b) present the
-> override as an implemented capability and, if a judge asks, trigger it live on a constructed claim.
+> ✅ **Logistics-override demo coverage.** The canonical 9-case set triggers this override: claims
+> C006/C007/C008 (glass frame, USB hub, monitor) all share order ORD-1006 against account A006, whose
+> `claims_last_30_days: 3` would otherwise read risky — so the override pulls the cluster to Low. This
+> is the headline example from the Q1 answer, now demoable live.
 
 ---
 
@@ -158,18 +157,23 @@ React + Vite + Tailwind  ->  Node + TS + Express  ->  OpenAI  (vision: Signal 1)
 
 ---
 
-## Final Demo Scenarios (6)
+## Final Demo Scenarios (9)
 
 | Claim | Product | Type | Role | Expected band |
 |-------|---------|------|------|---------------|
-| C001 | SSL 2 audio interface | AI-doctored | clear fraud — radial cracks impossible in metal | High |
-| C002 | Oxford shirt | AI-doctored from listing | ambiguous — believable tear, caught by reference match | Elevated / High |
-| C003 + C004 | leather backpack | reused image, two accounts | image-reuse hard flag | High |
-| C005 | A4 photo frame | **real** shattered glass | false-positive trap — dramatic but genuine | **Low** |
-| C006 | Calcifer resin tray | **real** breakage | legitimate; real photo doesn't match listing | **Low** |
+| C001 | Oxford shirt | **real** seam tear | legitimate apparel; clean account | **Low** |
+| C002 | helmet visor | suspicious | plausible scratch, but new-account behaviour raises it | Elevated |
+| C003 + C004 | skincare jar | reused image, two accounts | image-reuse hard flag | High |
+| C005 | ceramic mug | text-image mismatch | claim says bottom crack, image shows side; risky account | High |
+| C006 | glass photo frame | **real** shattered glass | logistics cluster + false-positive trap | **Low** |
+| C007 | USB hub | **real** transit damage | logistics cluster | **Low** |
+| C008 | monitor | **real** cracked LCD | logistics cluster | **Low** |
+| C009 | SSL 2 audio interface | AI-doctored | clear fraud — radial cracks impossible in metal; doctored from listing | High |
 
-Accounts: A001 (clean, files C005), A002 (serial returner), A003 (new account), A008 (reuse-ring),
-A009 (clean collector, files C006). Image filenames per `data/IMAGES_MANIFEST.md`.
+Accounts: A001 (clean, files C001), A002 (new account, C002), A003 + A004 (reuse-ring, C003/C004),
+A005 (risky, files C005 + C009), A006 (clean long-stander, files the C006/C007/C008 logistics cluster).
+Image filenames per `data/IMAGES_MANIFEST.md` — neutral names; ground truth lives only in `_dev`.
+The full locked set is `data/CANONICAL_DATASET.md`.
 
 ---
 
@@ -177,13 +181,14 @@ A009 (clean collector, files C006). Image filenames per `data/IMAGES_MANIFEST.md
 
 1. (10s) **Hook:** "AI is being used to attack the refund system — buyers submit AI-generated photos
    of damage that doesn't exist. We use AI to defend it."
-2. (20s) **Clear fraud (C001):** the SSL 2 with cracks fanning across the metal faceplate. High band;
+2. (20s) **Clear fraud (C009):** the SSL 2 with cracks fanning across the metal faceplate. High band;
    the reasoning quotes the physics — metal dents and scuffs, it doesn't fracture radially.
-3. (20s) **Image reuse (C003/C004):** the same backpack photo across two accounts. Hard flag fires.
-4. (25s) **Ambiguous (C002):** a believable shirt tear. Visual integrity is borderline, but the image
-   matches the listing photo it was edited from → reference match pushes it up. One-paragraph rationale.
-5. (15s) **False-positive trap (C005):** real shattered glass — looks alarming, lands **Low**.
-   "Calibrated, not trigger-happy." (Optionally C006 to reinforce: real damage doesn't match the listing.)
+3. (20s) **Image reuse (C003/C004):** the same skincare-jar photo across two accounts. Hard flag fires.
+4. (20s) **Logistics override (C006/C007/C008):** an account with three recent claims looks like a
+   serial returner — but all three share one order and delivery date. The override reads it as a transit
+   incident and pulls the cluster to Low. "Route to logistics, not fraud."
+5. (15s) **False-positive trap (C006):** that shattered glass is genuinely real — looks alarming, lands
+   **Low**. "Calibrated, not trigger-happy."
 
 Takeaway slide: "What takes ~3 days to investigate, our agent triages in ~5 seconds — for a human to confirm."
 
