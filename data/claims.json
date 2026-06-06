@@ -1,92 +1,122 @@
 [
   {
     "id": "C001",
-    "account_id": "A002",
+    "account_id": "A001",
     "product_id": "P001",
     "order_id": "ORD-1001",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The audio interface arrived with the monitor knob snapped off and the top panel cracked all around it.",
-    "images": ["ssl2_broken.jpg"],
+    "claim_text": "Item sleeve came in with a huge rip along the seam at the wrist section.",
+    "images": ["P001-real.jpg"],
     "_dev": {
-      "scenario_role": "clear fraud (implausible)",
-      "ground_truth": "fraudulent",
-      "expected_band": "High",
-      "why": "radiating cracks across an aluminium faceplate are not how metal fails (it dents/scuffs); also doctored from ssl2_intact.jpg; serial-returner account"
+      "scenario_role": "legitimate apparel damage",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "plausible seam tear on cotton oxford cloth and clean account should keep risk low"
     }
   },
   {
     "id": "C002",
-    "account_id": "A003",
+    "account_id": "A002",
     "product_id": "P002",
     "order_id": "ORD-1002",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "Shirt arrived with a large tear on the front, it was already like this in the package.",
-    "images": ["shirt_torn.jpg"],
+    "claim_text": "The visor arrived with a scratch on the lens that blocks vision.",
+    "images": ["P002-fake.jpg"],
     "_dev": {
-      "scenario_role": "ambiguous demo-winner",
+      "scenario_role": "suspicious new-account claim",
       "ground_truth": "fraudulent",
-      "expected_band": "Elevated-to-High via reference match",
-      "why": "tear looks plausible so Signal 1 is borderline, but the image is the intact listing photo (shirt_intact.jpg) with damage added — the reference comparison is the decisive catch"
+      "expected_band": "Elevated",
+      "why": "lens scratch may look plausible, but new-account and refund-rate rules should raise risk"
     }
   },
   {
     "id": "C003",
-    "account_id": "A008",
+    "account_id": "A003",
     "product_id": "P003",
     "order_id": "ORD-1003",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "There is a rip in the inner lining of the backpack near the pocket.",
-    "images": ["backpack_torn.jpg"],
+    "claim_text": "The black moisturiser jar arrived cracked even though I ordered it new.",
+    "images": ["P003b-fake.jpg"],
     "_dev": {
-      "scenario_role": "image reuse (pair 1 of 2)",
+      "scenario_role": "image reuse pair 1",
       "ground_truth": "fraudulent",
       "expected_band": "High",
-      "why": "same image as C004 from a different account — perceptual-hash hard flag; also doctored from backpack_intact.jpg"
+      "why": "same claim image appears again in C004, so ImageReuse should hard-flag it"
     }
   },
   {
     "id": "C004",
-    "account_id": "A002",
+    "account_id": "A004",
     "product_id": "P003",
     "order_id": "ORD-1004",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "Backpack lining was torn on arrival, requesting a refund.",
-    "images": ["backpack_torn.jpg"],
+    "claim_text": "The moisturiser came cracked on arrival and I need a refund.",
+    "images": ["P003b-fake.jpg"],
     "_dev": {
-      "scenario_role": "image reuse (pair 2 of 2)",
+      "scenario_role": "image reuse pair 2",
       "ground_truth": "fraudulent",
       "expected_band": "High",
-      "why": "identical image to C003 from a different account — the reuse hard-flag fires"
+      "why": "identical image to C003 from a different risky account should trigger the reuse hard flag"
     }
   },
   {
     "id": "C005",
-    "account_id": "A001",
+    "account_id": "A005",
     "product_id": "P004",
     "order_id": "ORD-1005",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The photo frame arrived with the glass completely shattered, shards everywhere inside the frame.",
-    "images": ["frame_shattered.jpg"],
+    "claim_text": "The mug has huge cracks at the bottom part and arrived in poor condition.",
+    "images": ["P004-fake.jpg"],
     "_dev": {
-      "scenario_role": "false-positive trap (LEGITIMATE, dramatic real damage)",
-      "ground_truth": "legitimate",
-      "expected_band": "Low (must NOT be High)",
-      "why": "real shattered glass looks alarming, but glass genuinely shatters this way from impact; clean account; genuine photo with no doctored reference. The star false-positive case — proves the system passes real damage even when it looks dramatic."
+      "scenario_role": "text-image mismatch plus risky account",
+      "ground_truth": "fraudulent",
+      "expected_band": "High",
+      "why": "claim says bottom crack while image shows visible side cracks; risky account behaviour should push risk high"
     }
   },
   {
     "id": "C006",
-    "account_id": "A009",
-    "product_id": "P005",
+    "account_id": "A006",
+    "product_id": "P006",
     "order_id": "ORD-1006",
     "reason_category": "damaged_or_faulty",
-    "claim_text": "The storage tray was cracked and broken into pieces when the parcel arrived.",
-    "images": ["calcifer_broken.jpg"],
+    "claim_text": "Received my glass photo frame completely shattered, with large cracks and loose fragments inside the packaging.",
+    "images": ["P006-real.jpg"],
     "_dev": {
-      "scenario_role": "legitimate (real damage; reference-no-match demo)",
+      "scenario_role": "logistics incident cluster - glass frame",
       "ground_truth": "legitimate",
       "expected_band": "Low",
-      "why": "genuine breakage photo. The product HAS an intact listing reference (calcifer_intact.jpg), but this real damage shot is a separate photo so it does NOT match — demonstrating that genuine photos don't trip the reference signal, unlike the doctored fakes"
+      "why": "shattered glass is physically plausible and shared-order logistics override should lower behavioural risk"
+    }
+  },
+  {
+    "id": "C007",
+    "account_id": "A006",
+    "product_id": "P007",
+    "order_id": "ORD-1006",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "The USB hub connector broke before any use and the product arrived unusable.",
+    "images": ["P007-real.jpg"],
+    "_dev": {
+      "scenario_role": "logistics incident cluster - USB hub",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "detached connector is plausible transit damage and the shared order should be treated as logistics, not fraud"
+    }
+  },
+  {
+    "id": "C008",
+    "account_id": "A006",
+    "product_id": "P008",
+    "order_id": "ORD-1006",
+    "reason_category": "damaged_or_faulty",
+    "claim_text": "The Acer monitor screen was already cracked when opened, with display damage straight out of the box.",
+    "images": ["P008a-real.jpg"],
+    "_dev": {
+      "scenario_role": "logistics incident cluster - monitor",
+      "ground_truth": "legitimate",
+      "expected_band": "Low",
+      "why": "cracked LCD damage is plausible and three claims share one order, so behavioural context should lower risk"
     }
   }
 ]
