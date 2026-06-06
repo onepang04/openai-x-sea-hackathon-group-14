@@ -1,18 +1,21 @@
 import {
   AlertTriangle,
+  ArrowRight,
   ArrowUpDown,
   ChevronDown,
+  CheckCircle2,
   Clock3,
   Eye,
   FileText,
   ImageIcon,
+  Mail,
   Package,
   Search,
   ShieldCheck,
   User,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
 import {
   applyQueueControls,
   getDefaultClaimId,
@@ -26,11 +29,15 @@ import type {
   EvidenceImage,
   RecommendedAction,
   RiskBand,
+  ReviewerSession,
   SignalName,
   SignalView,
   WorkflowState,
 } from "./types";
-import { loadClaimVerdicts } from "./model/claimVerdicts";
+import { loadClaimVerdicts, loginReviewer, type ClaimLoadProgress } from "./model/claimVerdicts";
+import { mockVerdicts } from "./data/mockVerdicts";
+
+const DEMO_REVIEWER_EMAIL = "reviewer@shopee.demo";
 
 const actionToWorkflow: Record<RecommendedAction, WorkflowState> = {
   Release: "Released",
@@ -38,14 +45,19 @@ const actionToWorkflow: Record<RecommendedAction, WorkflowState> = {
   Escalate: "Escalated",
 };
 
+type AppScreen = "login" | "dashboard";
+
 type LoadState =
-  | { status: "loading" }
-  | { status: "ready" }
+  | { status: "idle" }
+  | { status: "loading"; progress: ClaimLoadProgress }
+  | { status: "ready"; source: "api" | "demo" }
   | { status: "error"; message: string };
 
 function App() {
+  const [screen, setScreen] = useState<AppScreen>("login");
+  const [reviewerSession, setReviewerSession] = useState<ReviewerSession | null>(null);
   const [verdicts, setVerdicts] = useState<ClaimVerdictView[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
+  const [loadState, setLoadState] = useState<LoadState>({ status: "idle" });
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<QueueFilter>("All");
   const [sort, setSort] = useState<QueueSort>("Risk Score");
@@ -57,33 +69,27 @@ function App() {
   const [expandedSignal, setExpandedSignal] = useState<SignalName | null>("VisualClaimIntegrity");
 
   useEffect(() => {
-    let isCancelled = false;
+    if (screen !== "dashboard" || !reviewerSession || verdicts.length > 0 || loadState.status !== "idle") {
+      return;
+    }
 
-    loadClaimVerdicts()
+    setLoadState({ status: "loading", progress: { total: 0, completed: 0, cached: false } });
+
+    loadClaimVerdicts((progress) => {
+      setLoadState({ status: "loading", progress });
+    })
       .then((loadedVerdicts) => {
-        if (isCancelled) {
-          return;
-        }
-
         setVerdicts(loadedVerdicts);
         setWorkflowByClaim(
           Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
         );
         setSelectedId(getDefaultClaimId(loadedVerdicts));
-        setLoadState({ status: "ready" });
+        setLoadState({ status: "ready", source: "api" });
       })
       .catch((error: unknown) => {
-        if (isCancelled) {
-          return;
-        }
-
         setLoadState({ status: "error", message: error instanceof Error ? error.message : "Unknown API error" });
       });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
+  }, [loadState.status, screen, reviewerSession, verdicts.length]);
 
   const queueItems = useMemo(
     () => applyQueueControls(verdicts, workflowByClaim, query, filter, sort),
@@ -147,10 +153,72 @@ function App() {
     }));
   }
 
+  function clearVerdicts() {
+    setVerdicts([]);
+    setWorkflowByClaim({});
+    setSelectedId("");
+    setNotesByClaim({});
+    setActiveImageIndex(0);
+    setExpandedSignal("VisualClaimIntegrity");
+  }
+
+  function applyVerdicts(loadedVerdicts: ClaimVerdictView[], source: "api" | "demo") {
+    setVerdicts(loadedVerdicts);
+    setWorkflowByClaim(
+      Object.fromEntries(loadedVerdicts.map((verdict) => [verdict.claim.id, verdict.claim.workflowState])),
+    );
+    setSelectedId(getDefaultClaimId(loadedVerdicts));
+    setActiveImageIndex(0);
+    setExpandedSignal("VisualClaimIntegrity");
+    setLoadState({ status: "ready", source });
+  }
+
+  async function handleReviewerLogin(email: string) {
+    clearVerdicts();
+    const fallbackSession: ReviewerSession = {
+      id: "reviewer-demo",
+      displayName: "Demo Reviewer",
+      teamName: "Shopee Review Ops",
+      email,
+    };
+
+    try {
+      setReviewerSession(await loginReviewer(email));
+    } catch {
+      setReviewerSession(fallbackSession);
+    }
+
+    setLoadState({ status: "idle" });
+    setScreen("dashboard");
+  }
+
+  function handleDemoLogin() {
+    clearVerdicts();
+    setReviewerSession({
+      id: "reviewer-demo",
+      displayName: "Demo Reviewer",
+      teamName: "Shopee Review Ops",
+      email: DEMO_REVIEWER_EMAIL,
+    });
+    applyVerdicts(mockVerdicts, "demo");
+    setScreen("dashboard");
+  }
+
+  function handleSignOut() {
+    setReviewerSession(null);
+    setScreen("login");
+  }
+
+  if (screen === "login" || !reviewerSession) {
+    return (
+      <LoginScreen onDemoLogin={handleDemoLogin} onEngineLogin={handleReviewerLogin} />
+    );
+  }
+
   return (
     <div className="app-shell min-h-screen bg-ink-950 text-zinc-100">
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <Header loadState={loadState} />
+        <Header loadState={loadState} reviewerSession={reviewerSession} onSignOut={handleSignOut} />
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Metric label="Open claims" value={metrics.open} icon={<FileText aria-hidden="true" />} />
@@ -199,9 +267,137 @@ function App() {
   );
 }
 
-function Header({ loadState }: { loadState: LoadState }) {
+function LoginScreen({
+  onDemoLogin,
+  onEngineLogin,
+}: {
+  onDemoLogin: () => void;
+  onEngineLogin: (email: string) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail.includes("@")) {
+      setError("Enter a reviewer email to continue.");
+      return;
+    }
+
+    setError("");
+    onEngineLogin(normalizedEmail);
+  }
+
+  return (
+    <div className="app-shell min-h-screen bg-ink-950 text-zinc-100">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1420px] flex-col px-4 py-4 sm:px-6 lg:px-8">
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100">
+              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Claim Integrity</p>
+              <p className="text-xs text-zinc-500">Shopee reviewer dashboard</p>
+            </div>
+          </div>
+        </header>
+
+        <main className="login-hero mt-4 flex flex-1 overflow-hidden rounded-lg border border-zinc-800">
+          <section className="login-hero__content grid min-h-[calc(100svh-112px)] w-full gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] lg:items-center lg:px-10">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-md border border-zinc-700/80 bg-zinc-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]" />
+                Internal reviewer triage
+              </div>
+              <h1 className="mt-6 text-5xl font-semibold leading-[0.96] tracking-normal text-white sm:text-6xl">
+                Claim Integrity
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-200 sm:text-lg">
+                A Shopee reviewer workspace for refund-claim risk scoring, evidence review, and advisory actions.
+              </p>
+            </div>
+
+            <div>
+              <form className="login-card p-5 sm:p-6" onSubmit={submitLogin}>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100">
+                    <User className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Reviewer login</h2>
+                    <p className="text-sm text-zinc-500">Shopee Review Ops</p>
+                  </div>
+                </div>
+
+                <label className="mt-6 block">
+                  <span className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">Email</span>
+                  <span className="mt-2 flex min-h-12 items-center gap-2 rounded-lg border border-zinc-800 bg-ink-900 px-3 py-2 text-sm text-zinc-300 focus-within:border-zinc-500">
+                    <Mail className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+                    <input
+                      className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+                      inputMode="email"
+                      placeholder="Enter reviewer email"
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </span>
+                </label>
+
+                {error ? (
+                  <p className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+                    {error}
+                  </p>
+                ) : null}
+
+                <div className="mt-6 grid gap-3">
+                  <button
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-zinc-100 bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-950 transition-transform duration-150 ease-out-strong active:scale-[0.97]"
+                    type="submit"
+                  >
+                    Load live API
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-semibold text-zinc-200 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+                    type="button"
+                    onClick={onDemoLogin}
+                  >
+                    Live demo
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function Header({
+  loadState,
+  onSignOut,
+  reviewerSession,
+}: {
+  loadState: LoadState;
+  onSignOut: () => void;
+  reviewerSession: ReviewerSession;
+}) {
   const statusLabel =
-    loadState.status === "ready" ? "Live JSON data" : loadState.status === "loading" ? "Loading claims" : "API unavailable";
+    loadState.status === "ready"
+      ? loadState.source === "api"
+        ? "Live JSON data"
+        : "Reviewer demo data"
+      : loadState.status === "loading"
+        ? "Loading claims"
+        : loadState.status === "error"
+          ? "API unavailable"
+          : "Preparing dashboard";
 
   return (
     <header className="flex flex-col gap-3 border-b border-zinc-800/80 pb-4 md:flex-row md:items-center md:justify-between">
@@ -211,25 +407,54 @@ function Header({ loadState }: { loadState: LoadState }) {
         </div>
         <div>
           <h1 className="text-lg font-semibold tracking-normal text-white">Claim Integrity</h1>
-          <p className="text-sm text-zinc-500">Reviewer queue</p>
+          <p className="text-sm text-zinc-500">Shopee reviewer queue</p>
         </div>
       </div>
-      <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
-        <span
-          className={cx(
-            "h-2 w-2 rounded-full",
-            loadState.status === "error"
-              ? "bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.45)]"
-              : "bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]",
-          )}
-        />
-        {statusLabel}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
+          <User className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+          <span className="max-w-[180px] truncate">{reviewerSession.teamName}</span>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-400">
+          <span
+            className={cx(
+              "h-2 w-2 rounded-full",
+              loadState.status === "error"
+                ? "bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.45)]"
+                : loadState.status === "loading"
+                  ? "bg-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.35)]"
+                  : "bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.45)]",
+            )}
+          />
+          {statusLabel}
+        </div>
+        <button
+          className="min-h-10 rounded-md border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm font-semibold text-zinc-300 transition-colors duration-150 ease-out-strong hoverable:hover:border-zinc-600 active:scale-[0.97]"
+          type="button"
+          onClick={onSignOut}
+        >
+          Sign out
+        </button>
       </div>
     </header>
   );
 }
 
 function StatusPanel({ loadState }: { loadState: LoadState }) {
+  const progress = loadState.status === "loading" ? loadState.progress : null;
+  const progressPercent =
+    progress && progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 8;
+  const progressLabel = progress
+    ? progress.total > 0
+      ? `${progress.completed} of ${progress.total} claims scored`
+      : "Connecting to live verdict stream"
+    : "";
+  const progressDetail = progress?.cached
+    ? "Loading cached live verdicts."
+    : progress?.currentClaimId
+      ? `Latest completed: ${progress.currentClaimId}`
+      : "Starting live Signal 1, image reuse, and behavioural scoring.";
+
   return (
     <main className="grid flex-1 place-items-center rounded-lg border border-zinc-800 bg-zinc-950/80 p-6">
       <div className="max-w-lg text-center">
@@ -244,6 +469,28 @@ function StatusPanel({ loadState }: { loadState: LoadState }) {
             ? loadState.message
             : "Connecting to the claim API and loading the final JSON dataset."}
         </p>
+        {progress ? (
+          <div className="mt-5 text-left">
+            <div className="flex items-center justify-between gap-3 text-xs font-medium text-zinc-500">
+              <span>{progressLabel}</span>
+              <span>{progress.total > 0 ? `${progressPercent}%` : ""}</span>
+            </div>
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800"
+              role="progressbar"
+              aria-label="Live API loading progress"
+              aria-valuemin={0}
+              aria-valuemax={progress.total || 100}
+              aria-valuenow={progress.total ? progress.completed : undefined}
+            >
+              <div
+                className="h-full rounded-full bg-emerald-400 transition-all duration-300 ease-out-strong"
+                style={{ width: `${Math.max(8, Math.min(100, progressPercent))}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-zinc-600">{progressDetail}</p>
+          </div>
+        ) : null}
       </div>
     </main>
   );
@@ -522,6 +769,8 @@ function VerdictPanel({
         </div>
 
         <div className="min-w-0 space-y-5">
+          <EvidenceFlagsPanel flags={verdict.claim.flags} />
+
           <SignalsPanel
             expandedSignal={expandedSignal}
             signals={verdict.signals}
@@ -573,6 +822,31 @@ function VerdictPanel({
             </label>
           </section>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function EvidenceFlagsPanel({ flags }: { flags: string[] }) {
+  const visibleFlags = uniqueStrings(flags);
+
+  if (visibleFlags.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-lg border border-zinc-800 bg-ink-900 p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-white">
+        <FileText className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+        Evidence flags
+      </div>
+      <div className="mt-3 grid gap-2">
+        {visibleFlags.map((flag) => (
+          <div key={flag} className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2">
+            <EvidenceFlagBadge flag={flag} />
+            <p className="mt-2 text-sm leading-5 text-zinc-400">{evidenceFlagDescription(flag)}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -907,6 +1181,14 @@ function WorkflowBadge({ state }: { state: WorkflowState }) {
   );
 }
 
+function EvidenceFlagBadge({ flag }: { flag: string }) {
+  return (
+    <span className={cx("inline-flex w-fit items-center rounded-md border px-2 py-1 text-xs font-semibold", evidenceFlagClass(flag))}>
+      {flag}
+    </span>
+  );
+}
+
 function HardFlagBadge({ compact = false }: { compact?: boolean }) {
   return (
     <span
@@ -973,6 +1255,10 @@ function asStringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
+}
+
 function signalTone(value: number): "low" | "medium" | "high" {
   if (value > 0.65) {
     return "high";
@@ -1034,6 +1320,67 @@ function workflowClass(state: WorkflowState): string {
     return "border-red-500/30 bg-red-500/10 text-red-100";
   }
   return "border-zinc-700 bg-zinc-900 text-zinc-300";
+}
+
+function evidenceFlagClass(flag: string): string {
+  const normalized = flag.toLowerCase();
+
+  if (normalized.includes("synthid")) {
+    return "border-sky-400/30 bg-sky-400/10 text-sky-100";
+  }
+
+  if (
+    normalized.includes("implausibility") ||
+    normalized.includes("reuse") ||
+    normalized.includes("reference") ||
+    normalized.includes("mismatch")
+  ) {
+    return "border-red-500/30 bg-red-500/10 text-red-100";
+  }
+
+  if (normalized.includes("risky") || normalized.includes("new account")) {
+    return "border-amber-500/30 bg-amber-500/10 text-amber-100";
+  }
+
+  if (normalized.includes("logistics")) {
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-100";
+  }
+
+  return "border-zinc-700 bg-zinc-900 text-zinc-300";
+}
+
+function evidenceFlagDescription(flag: string): string {
+  const normalized = flag.toLowerCase();
+
+  if (normalized.includes("synthid")) {
+    return "Submitted evidence carries a SynthID watermark, so provenance is treated as supporting evidence for reviewer follow-up.";
+  }
+
+  if (normalized.includes("implausibility")) {
+    return "The visual reasoning found damage mechanics that do not fit the product material.";
+  }
+
+  if (normalized.includes("reference")) {
+    return "The submitted image closely resembles a product reference image.";
+  }
+
+  if (normalized.includes("reuse")) {
+    return "A near-duplicate evidence image was found in another claim.";
+  }
+
+  if (normalized.includes("mismatch")) {
+    return "The buyer text and submitted evidence do not describe the same visible damage.";
+  }
+
+  if (normalized.includes("logistics")) {
+    return "Order context suggests parcel-level transit damage rather than buyer-level escalation.";
+  }
+
+  if (normalized.includes("risky") || normalized.includes("new account")) {
+    return "Account context contributes additional reviewer-follow-up risk.";
+  }
+
+  return "This flag adds context for the reviewer without changing the recommended action by itself.";
 }
 
 function actionButtonClass(action: RecommendedAction): string {

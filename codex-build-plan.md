@@ -14,7 +14,7 @@
 Codex is fast at boilerplate, scaffolding, wiring, and UI. It is *not* good at the two things that
 decide whether the project is good:
 
-1. **The Signal 1 prompt** — tuned by reading outputs against your real images (SSL2, frame, Calcifer).
+1. **The Signal 1 prompt** — tuned by reading outputs against your real images (SSL2, frame, logistics cluster).
    Codex can't judge "did this verdict make sense." See `signal-1-tuning-notes.md`.
 2. **Mock-data realism + demo polish** — taste and judgment.
 
@@ -48,7 +48,7 @@ claim-integrity-agent/
 │   ├── claims.json  accounts.json  products.json  orders.json
 │   ├── IMAGES_MANIFEST.md
 │   └── images/{claims,reference}/
-├── apps/web/                 # Vite + React + TS + Tailwind   (Person C)
+├── apps/web/                 # Vite + React + TS + Tailwind, reviewer login + internal dashboard (Person C)
 └── apps/api/                 # Node + Express + TS            (Person B)
     └── src/{data,signals,scoring,ai,scripts}, server.ts
 ```
@@ -62,7 +62,7 @@ live in the repo but are NOT needed in Codex's path. Keep AGENTS.md authoritativ
 
 One `openai` client, two model ids:
 - **Vision** — the Signal 1 call. `OPENAI_VISION_MODEL`, auth `OPENAI_API_KEY`.
-- **Narrator** — the reviewer prose, a text-only call. `OPENAI_NARRATOR_MODEL` (may be a cheaper text
+- **Narrator** — the reviewer-facing prose, a text-only call. `OPENAI_NARRATOR_MODEL` (may be a cheaper text
   model), same `OPENAI_API_KEY`.
 - **Wrap the narrator with a fallback** (a templated string built from the signal evidence). A
   rate-limit/timeout mid-demo would be ugly, and the score doesn't depend on the narrator. Make it swappable.
@@ -92,17 +92,17 @@ npm run eval                  # full pipeline incl. vision + narrator — Stage 
 ```
 
 `--no-vision` proves the aggregator, banding, hard-flag, image-reuse, and behavioural logic against
-C003/C004 before you spend a single token. Sample full-eval read:
+C005/C020 before you spend a single token. Sample full-eval read:
 
 ```text
-C001 | SSL 2        | expected High      | actual High  92  hard_flag: visual_implausibility   PASS
+C004 | visor        | expected Low       | actual Low   12  hard_flag: none                     PASS
   Visual .90/.91 | Reuse —     | Behaviour .80/.70
-C003 | backpack     | expected High      | actual High  78  hard_flag: image_reuse              PASS
-C005 | photo frame  | expected Low       | actual Low   14  hard_flag: none                     PASS  (trap held)
-C006 | Calcifer     | expected Low       | actual Low   11  hard_flag: none                     PASS
+C005 | skincare     | expected High      | actual High  78  hard_flag: image_reuse              PASS
+C010 | container    | expected Low       | actual Low   14  hard_flag: none                     PASS  (logistics held)
+C019 | SSL 2        | expected High      | actual High  92  hard_flag: visual_implausibility   PASS
 ```
 
-**C005 and C006 landing Low is the accuracy gate.** Treat a regression there as a build-breaker.
+**The active legitimate claims and C010/C011/C012 logistics cluster landing Low is the accuracy gate.** Treat a regression there as a build-breaker.
 
 ---
 
@@ -110,14 +110,14 @@ C006 | Calcifer     | expected Low       | actual Low   11  hard_flag: none     
 
 | Hr | Stage (master prompt) | Driver | Others |
 |----|----------------------|--------|--------|
-| 0–1 | 0 scaffold + 1 types/data | B | A preps Signal-1 tuning; C sketches UI vs mocked score; D verifies images/JSON load |
-| 1–4 | 2 deterministic spine (+ `eval --no-vision`) | B | **A tunes Signal 1 by hand against the 6 scenarios — the critical path** |
+| 0–1 | 0 scaffold + 1 types/data | B | A preps Signal-1 tuning; C sketches login/dashboard UI vs mocked score; D verifies images/JSON load |
+| 1–4 | 2 deterministic spine (+ `eval --no-vision`) | B | **A tunes Signal 1 by hand against the active scenarios — the critical path** |
 | 4–6 | 3 vision + OpenAI narrator (full eval) | B + A | D integrates; C polishes verdict card |
-| 6–8 | 4 API + 5 verdict-card UI | C | D leads end-to-end test across all 6 scenarios; A/B fix |
+| 6–8 | 4 API + 5 reviewer login + verdict-card UI | C | D leads end-to-end test across all active scenarios; A/B fix |
 | 8–9 | 6 polish | D + C | A/B standby, targeted fixes only |
 | 9–10 | rehearse | whole team, D drives | record backup video, buffer |
 
-**Lock the API contract hour 1** (`POST /api/claim/:id/score`, `GET /api/claims`, the `ScoredClaim`
+**Lock the API contract hour 1** (`POST /api/reviewer/login`, `POST /api/claim/:id/score`, `GET /api/claims`, the `ScoredClaim`
 shape). **D owns "does it run end-to-end" from hr 4.** **No unverified Codex output to main.**
 
 ---

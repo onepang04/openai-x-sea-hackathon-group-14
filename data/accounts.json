@@ -9,15 +9,6 @@
     "profile_note": "new account with high recent claim velocity"
   },
   {
-    "id": "A002",
-    "display_name": "wrist_seam_buyer",
-    "account_age_days": 420,
-    "total_orders": 36,
-    "total_refunds": 2,
-    "claims_last_30_days": 1,
-    "profile_note": "established account with low refund rate"
-  },
-  {
     "id": "A003",
     "display_name": "visor_return_91",
     "account_age_days": 22,
@@ -61,15 +52,6 @@
     "total_refunds": 3,
     "claims_last_30_days": 1,
     "profile_note": "clean buyer reporting packaging quality issue"
-  },
-  {
-    "id": "A008",
-    "display_name": "mug_claims_44",
-    "account_age_days": 19,
-    "total_orders": 4,
-    "total_refunds": 3,
-    "claims_last_30_days": 3,
-    "profile_note": "new account with frequent refund requests"
   },
   {
     "id": "A009",

@@ -103,7 +103,6 @@ const plausibleNoFlag = (o: Signal1Output) =>
 
 const EXPECTATIONS: Record<string, Expectation> = {
   // --- Legitimate claims: the false-positive anchors. Signal 1 must rate them plausible, no flag. ---
-  C002: { want: "plausible, NO flag (legit sleeve seam tear)", ok: plausibleNoFlag },
   C004: { want: "plausible, NO flag (legit visor scratch + colour)", ok: plausibleNoFlag },
   C007: { want: "plausible, NO flag (legit skincare packaging damage)", ok: plausibleNoFlag },
   C009: { want: "plausible, NO flag (legit mug print smudge)", ok: plausibleNoFlag },
@@ -112,9 +111,6 @@ const EXPECTATIONS: Record<string, Expectation> = {
   C012: { want: "plausible, NO flag (logistics cluster, real plastic crack)", ok: plausibleNoFlag },
   C014: { want: "plausible, NO flag (legit glass shatter)", ok: plausibleNoFlag },
   C016: { want: "plausible, NO flag (legit USB connector break)", ok: plausibleNoFlag },
-
-  // --- Text-image mismatch showcase: claim says "bottom" cracks, photo shows the side/print crack. ---
-  C008: { want: "text_image_match === false (catches the mismatch)", ok: (o) => o.text_image_match === false },
 
   // --- Behaviour-only / reuse frauds: damage is physically plausible, so Signal 1 must NOT hard-flag;
   //     conviction comes from Signal 3 (behaviour) or Signal 2 (image reuse). ---

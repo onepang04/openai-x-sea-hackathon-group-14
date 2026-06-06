@@ -7,13 +7,6 @@
     "total_claims_against_order": 1
   },
   {
-    "id": "ORD-2002",
-    "account_id": "A002",
-    "delivery_date": "2026-06-01",
-    "items": 1,
-    "total_claims_against_order": 1
-  },
-  {
     "id": "ORD-2003",
     "account_id": "A003",
     "delivery_date": "2026-06-02",
@@ -45,13 +38,6 @@
     "id": "ORD-2007",
     "account_id": "A007",
     "delivery_date": "2026-06-03",
-    "items": 1,
-    "total_claims_against_order": 1
-  },
-  {
-    "id": "ORD-2008",
-    "account_id": "A008",
-    "delivery_date": "2026-06-04",
     "items": 1,
     "total_claims_against_order": 1
   },

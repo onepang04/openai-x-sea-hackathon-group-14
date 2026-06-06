@@ -56,20 +56,22 @@ uncertain      any     -> 0.40-0.50   cap confidence at 0.5
 `evidence` = `plausibility_reasoning` (+ `mismatches` if any).
 Hard-flag: `physical_plausibility == "implausible"` AND `confidence > 0.85` → forces band High.
 
-## Tuning checklist — run against EVERY scenario before you call it done
+## Tuning checklist — run against every active scenario before you call it done
 
-- [ ] **C001 — SSL 2 (AI-doctored, radial cracks across the metal faceplate)** → `implausible`,
-      confidence > 0.85. Key on the *metal fracturing radially*, not just "a knob broke." This must
-      trip the hard flag.
-- [ ] **C002 — shirt (AI-doctored believable tear)** → `plausible` or borderline `uncertain`. Signal 1
-      alone should NOT convict it; the reference-image match is the decisive catch. If Signal 1 calls
-      this confidently implausible you've over-fit.
-- [ ] **C003 / C004 — backpack (reused image)** → likely `plausible`; the image-reuse hard flag decides,
-      not Signal 1.
-- [ ] **C005 — photo frame (REAL shattered glass)** → `plausible`, NOT flagged. The false-positive trap.
-      If it trips `implausible`, your prompt is over-eager on dramatic damage — strengthen the
-      "severity is not suspicion / glass shatters violently" guidance.
-- [ ] **C006 — Calcifer (REAL breakage)** → `plausible`, low risk.
+`C002` and `C008` are excluded from the active demo/eval set because they produced ambiguous findings for
+the current problem statement. Do not tune the prompt around them.
 
-If C005 or C006 land anywhere but Low after aggregation, stop and fix the prompt before touching
-anything else — those two are the demo's credibility.
+- [ ] **Active legitimate claims (C004, C007, C009, C010, C011, C012, C014, C016)** → `plausible`,
+      `text_image_match=true`, no hard flag. Severity alone is not suspicion.
+- [ ] **Behaviour-only frauds (C001, C003, C006, C013, C015, C017, C018)** → no Signal 1 hard flag.
+      Their conviction comes from BehaviouralContext, so Signal 1 should stay calibrated.
+- [ ] **Image-reuse pair (C005 + C020)** → no Signal 1 hard flag. The same evidence image is owned by
+      ImageReuse, not visual plausibility.
+- [ ] **Logistics cluster (C010/C011/C012)** → plausible plastic damage. Aggregation should land Low
+      because BehaviouralContext applies the shared-order override.
+- [ ] **C019 — SSL 2 doctored-from-listing** → acceptable Signal 1 outcomes are either a strong
+      physical-implausibility flag for radial metal cracks or a non-gating result; the hard conviction
+      comes from the Signal 2 reference match against `ssl2_intact.jpg`.
+
+If any active legitimate claim or the logistics cluster lands above Low after aggregation, stop and fix
+the prompt/scoring before touching anything else. Those cases are the demo's credibility.

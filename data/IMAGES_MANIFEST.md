@@ -1,7 +1,7 @@
-# Image Manifest — Claim-Integrity Agent (realistic 20-claim set)
+# Image Manifest — Claim-Integrity Agent (realistic 18-claim active set)
 
 Filenames must match `claims.json` / `products.json` **exactly** (case-sensitive). Ground truth lives
-only in `_dev`, never in a filename. 20 claim images (C018 has two) + 1 reference image.
+only in `_dev`, never in a filename. 18 active claim images (C018 has two) + 1 reference image.
 
 - Claim images → `data/images/claims/`
 - Reference (pristine listing) images → `data/images/reference/`
@@ -11,13 +11,11 @@ only in `_dev`, never in a filename. 20 claim images (C018 has two) + 1 referenc
 | Filename | Claim | Real/fake | Role |
 |----------|-------|-----------|------|
 | `shirt_black_sleeve_rip.jpg` | C001 | fake | behaviour-only suspicious sleeve rip |
-| `shirt_wrist_seam_tear.jpg` | C002 | real | legit sleeve seam tear |
 | `visor_lens_scratch.jpg` | C003 | fake | behaviour-only suspicious visor scratch |
 | `visor_scratched_wrong_color.jpg` | C004 | real | legit visor scratch + colour mismatch |
 | `skincare_jar_cracked_closeup.jpg` | **C005 + C020** | fake | **image-reuse pair** — one file, two accounts |
 | `skincare_boxes_cracked.jpg` | C006 | fake | behaviour-only suspicious skincare claim |
 | `skincare_packaging_damaged.jpg` | C007 | real | legit skincare packaging damage |
-| `mug_bottom_cracked.jpg` | C008 | fake | **text-image mismatch** ("bottom" vs side-print crack) |
 | `mug_print_smudged.jpg` | C009 | real | legit mug print-quality complaint |
 | `plastic_container_side_crack.jpg` | C010 | real | **logistics cluster** (1/3, ORD-2010) |
 | `plastic_container_lid_crack_closeup.jpg` | C011 | real | **logistics cluster** (2/3, ORD-2010) |
@@ -39,7 +37,7 @@ only in `_dev`, never in a filename. 20 claim images (C018 has two) + 1 referenc
 P001–P008 have **no** reference image (their claims are genuine photos or behaviour/reuse cases, not doctored-from-listing).
 
 ## How the signals fire on this set
-- **Signal 1 (visual):** stays calm on the real-damage legits (false-positive anchors); catches the C008 text-image mismatch. Most fraud photos are physically plausible — that's intentional; their conviction comes from Signals 2/3.
+- **Signal 1 (visual):** stays calm on the real-damage legits (false-positive anchors); C019 is the active physical-implausibility showcase. Most fraud photos are physically plausible — that's intentional; their conviction comes from Signals 2/3.
 - **Signal 2 (pHash):** C005 ↔ C020 share one file → reuse hard flag. C019 (`ssl2_broken.jpg`) is a near-duplicate of `ssl2_intact.jpg` → doctored-from-listing hard flag.
 - **Signal 3 (behavioural):** risky accounts raise the behaviour-only frauds to Elevated; the ORD-2010 cluster (3 claims, one shipment) triggers the logistics override → Low.
 

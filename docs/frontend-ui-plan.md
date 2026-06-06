@@ -1,16 +1,17 @@
 
 # Frontend UI Plan
 
-Person C owns the reviewer-facing React UI for the Claim Integrity demo. This document tracks agreed frontend decisions so the mocked UI and later backend integration stay aligned.
+Person C owns the Shopee internal reviewer React UI for the Claim Integrity demo. This document tracks agreed frontend decisions so the mocked UI and later backend integration stay aligned.
 
 ## Direction
 
-- Build a dark-only reviewer dashboard with a premium, restrained feel inspired by Resend-style landing-page visuals and dashboard-like product surfaces.
+- Build a dark-only internal reviewer dashboard with a premium, restrained feel inspired by Resend-style landing-page visuals and dashboard-like product surfaces.
 - Use original visuals only. Do not copy Resend brand assets, images, logos, or copy.
-- First screen is the working reviewer queue, not a landing page.
+- First screen is a demo reviewer login. After login, show the working claim queue, not a landing page.
 - The layout should show the claim queue and selected verdict detail in one operational view where practical.
 - Keep the main workflow dense and useful: queue, Risk Score, Risk Band, evidence images, signal evidence, explanation, and reviewer actions.
 - Include original premium visual treatments in the first pass so the dashboard feels polished, not purely utilitarian.
+- Do not build a claim creation/input form. Claims are assumed to arrive from Shopee/platform data via webhook; demo JSON stands in for those records.
 
 ## Visual System
 
@@ -23,7 +24,7 @@ Person C owns the reviewer-facing React UI for the Claim Integrity demo. This do
 - Use subtle border-driven depth; avoid heavy shadows.
 - Use compact dashboard typography, not hero-scale marketing type.
 - Add non-branded visual depth with original light-ray/floor-grid treatment, faint code/log panels, dashboard screenshot density, and signal-flow motifs.
-- Visual treatments must support the reviewer workflow and must not obscure claim evidence, scores, actions, or signal details.
+- Visual treatments must support the internal reviewer workflow and must not obscure claim evidence, scores, actions, or signal details.
 
 ## Motion
 
@@ -39,7 +40,7 @@ Person C owns the reviewer-facing React UI for the Claim Integrity demo. This do
 
 - Default queue sort: Risk Score descending.
 - Default selected claim: highest-risk claim.
-- Include all 8 seeded scenarios in mocked data, while keeping the demo narrative claims easy to find through sorting and badges.
+- Include all active seeded scenarios from the live API, while keeping the demo narrative claims easy to find through sorting and badges.
 - Do not add a visible demo rail. Backup recording can use the same real UI.
 - Do not include keyboard shortcuts in the first pass.
 - Local-only workflow states are allowed for the demo:
@@ -51,7 +52,7 @@ Person C owns the reviewer-facing React UI for the Claim Integrity demo. This do
   - `Release`
   - `Request evidence`
   - `Escalate`
-- Include an override note field.
+- Include an override note field for the reviewer's rationale.
 - Avoid auto-deny language.
 
 ## Evidence Images
@@ -166,17 +167,27 @@ interface ClaimVerdictView {
 }
 ```
 
+Demo login can use this minimal local shape until Person B publishes the final endpoint:
+
+```ts
+interface ReviewerSession {
+  id: string;
+  displayName: string;
+  teamName: string;
+}
+```
+
 ## Integration Assumptions
 
 - Frontend should be API-driven and avoid hardcoded image paths because the docs currently differ between `data/`, `mock-data/`, `images/claims/`, and `mock-data/images/`.
-- Person B should publish `/api/claims`, `/api/claims/:id`, and `/api/claims/:id/score` response shapes before the mock data is swapped out.
+- Person B should publish `/api/reviewer/login`, `/api/claims`, `/api/claims/:id`, and `/api/claim/:id/score` response shapes before the mock data is swapped out. The plural score path `/api/claims/:id/score` can remain as a compatibility alias.
 - Missing score data should render a stable loading skeleton or compact retryable error, not a blank page.
-- No auth, database, chart library, new signal, or metadata/EXIF surface.
+- No production auth, database, chart library, new signal, metadata/EXIF surface, or manual claim input surface.
 
 ## Development Approach
 
 - Do not create a separate PRD for Person C unless scope materially changes.
-- Treat this document plus `AGENTS.md` and `claim-integrity-agent-spec.md` as the frontend working brief.
+- Treat this document plus `AGENTS.md`, `CONTEXT.md`, and `claim-integrity-agent-spec.md` as the frontend working brief.
 - Use mocked frontend data first, then swap to Person B's API contract later.
 - Use targeted behavior tests where they reduce integration risk:
   - queue sorting and filtering
@@ -189,11 +200,12 @@ interface ClaimVerdictView {
 
 ## QA Checklist
 
-- All 8 seeded scenarios can be selected from the queue.
+- Demo reviewer login gates the dashboard.
+- All active seeded claims can be selected from the queue after login.
 - Default view opens on the highest-risk claim.
-- C003/C004 image reuse can show matched prior claim evidence when expanded.
-- C006 false-positive trap does not present as an automatic denial.
-- C007/C008 logistics incident override is visible in BehaviouralContext details when provided.
+- C005/C020 image reuse can show matched prior claim evidence when expanded.
+- False-positive anchors do not present as automatic denials.
+- C010/C011/C012 logistics incident override is visible in BehaviouralContext details when provided.
 - Risk Score is whole-number and never labeled as probability.
 - Actions update local workflow state without implying backend persistence.
 - Text does not overflow buttons, badges, rows, or panels at desktop and mobile widths.

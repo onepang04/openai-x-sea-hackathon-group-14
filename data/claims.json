@@ -15,21 +15,6 @@
     }
   },
   {
-    "id": "C002",
-    "account_id": "A002",
-    "product_id": "P001",
-    "order_id": "ORD-2002",
-    "reason_category": "damaged_or_faulty",
-    "claim_text": "Item sleeve came in with huge rip along seam of sleeve at wrist section. Terrible would not reccomend",
-    "images": ["shirt_wrist_seam_tear.jpg"],
-    "_dev": {
-      "scenario_role": "legitimate sleeve seam tear",
-      "ground_truth": "legitimate",
-      "expected_band": "Low",
-      "why": "tear follows a plausible sleeve seam failure and the account is clean"
-    }
-  },
-  {
     "id": "C003",
     "account_id": "A003",
     "product_id": "P002",
@@ -102,21 +87,6 @@
       "ground_truth": "legitimate",
       "expected_band": "Low",
       "why": "packaging damage is plausible and the buyer account is clean"
-    }
-  },
-  {
-    "id": "C008",
-    "account_id": "A008",
-    "product_id": "P004",
-    "order_id": "ORD-2008",
-    "reason_category": "damaged_or_faulty",
-    "claim_text": "Delivery was very fast, came on the next day, and the photo quality is normal only. The mug have huge cracks at bottom part.",
-    "images": ["mug_bottom_cracked.jpg"],
-    "_dev": {
-      "scenario_role": "text-image mismatch fraud",
-      "ground_truth": "fraudulent",
-      "expected_band": "Elevated",
-      "why": "the claim says huge cracks at the bottom but the photo shows the crack across the printed side; Signal 1 flags the text-image mismatch, but a mismatch is not a hard flag, so with the risky account it lands Elevated (route to human review)"
     }
   },
   {

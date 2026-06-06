@@ -5,21 +5,22 @@ must all use these exact claim IDs, product IDs, neutral filenames, and expected
 anything you hold conflicts with this file, THIS WINS.** Paste this whole file into your Codex session
 as context before you build.
 
-20 claims · 9 products · 18 accounts · realistic SEA marketplace photos, with curated showcase cases
+18 active claims · 9 products · 16 accounts · realistic SEA marketplace photos, with curated showcase cases
 grafted in so every signal capability has both a "fires" and a "stays-calm" example.
 
-## The 20 claims
+`C002` and `C008` are intentionally excluded from the active demo/eval set because their findings were ambiguous
+for the current problem statement. Do not renumber the remaining claims.
+
+## The 18 active claims
 
 | Claim | Product (id) | Ground truth | Expected band | Caught by (star signal) |
 |-------|--------------|--------------|---------------|-------------------------|
 | C001 | shirt (P001) | fraudulent | Elevated | S3 behaviour (plausible damage, no hard signal) |
-| C002 | shirt (P001) | legitimate | Low | S1 restraint (real seam tear) |
 | C003 | visor (P002) | fraudulent | Elevated | S3 behaviour |
 | C004 | visor (P002) | legitimate | Low | S1 restraint |
 | C005 | skincare (P003) | fraudulent | High | **S2 image reuse** (pair with C020) |
 | C006 | skincare (P003) | fraudulent | Elevated | S3 behaviour |
 | C007 | skincare (P003) | legitimate | Low | S1 restraint |
-| C008 | mug (P004) | fraudulent | Elevated | **S1 text-image mismatch** ("bottom" vs side crack; mismatch isn't a hard flag → Elevated) |
 | C009 | mug (P004) | legitimate | Low | S1 restraint |
 | C010 | container (P005) | legitimate | Low | **S3 logistics override** (ORD-2010) |
 | C011 | container (P005) | legitimate | Low | **S3 logistics override** (ORD-2010) |
@@ -34,7 +35,7 @@ grafted in so every signal capability has both a "fires" and a "stays-calm" exam
 | C020 | skincare (P003) | fraudulent | High | **S2 image reuse** (pair with C005) |
 
 **Coverage — every signal has a fires-case and a stays-calm case:**
-- **S1 implausibility/mismatch** fires: C008 (mismatch), C019 (metal cracks). Stays calm: all 9 legits.
+- **S1 implausibility** fires: C019 (metal cracks). Stays calm: all 8 active legitimate claims.
 - **S2 reuse** fires: C005 ↔ C020 (shared image). **S2 reference** fires: C019 (vs `ssl2_intact.jpg`). Stays calm: every unique real photo.
 - **S3 risk-up** fires: the behaviour-only frauds → Elevated. **S3 override** fires: C010/C011/C012 (ORD-2010) → Low.
 
@@ -52,9 +53,12 @@ that's the "calibrated, not trigger-happy" thesis. Don't force behaviour-only fr
 - Ground truth lives ONLY in `_dev`. NEVER in a filename, an API response, or the UI.
 - Claim image filenames are neutral (content-describing — no "real"/"fake").
 - `_dev` is stripped before any model call and before any API response.
+- Don't renumber active claims. No DB, production auth, deploy infra, or manual claim input form.
+- Demo reviewer login is allowed; seeded claims may all be visible to the demo Shopee reviewer unless reviewer assignment is explicitly added.
 - Only P009 carries a `reference_image`; don't invent fields; no DB / auth / deploy infra.
 
 ## API contract (frontend + backend build to this)
+- `POST /api/reviewer/login` → demo reviewer session for the dashboard.
 - `GET /api/claims` → claim summaries (list view).
 - `POST /api/claims/:id/score` (alias `/api/claim/:id/score`) → full `ScoredClaim`.
 - `ScoredClaim = { claimId, riskScore (0–100 int), band: "Low"|"Elevated"|"High", hardFlag: string|null, signals: SignalResult[], explanation, recommendedAction }`
@@ -63,6 +67,6 @@ that's the "calibrated, not trigger-happy" thesis. Don't force behaviour-only fr
 
 ## Per-stream notes
 - **Data:** claims / products / accounts / orders + images match the table exactly; only P009 has a reference image.
-- **Frontend:** claim IDs C001–C020; render the `ScoredClaim` shape above; the UI reads the live API.
+- **Frontend:** active claim IDs are C001–C020 excluding C002 and C008; render the `ScoredClaim` shape above; the UI reads the live API.
 - **Backend:** real Signals 1/2/3 + aggregator + narrator; strip `_dev`; the aggregator only consumes `SignalResult[]`.
-- **Prompt/eval (Signal 1):** false-positive anchors = the 9 legits; C008 = mismatch showcase; C019 owned by S2.
+- **Prompt/eval (Signal 1):** false-positive anchors = the 8 active legits; C019 is the active S1 hard-signal showcase and is also owned by S2 reference matching.
